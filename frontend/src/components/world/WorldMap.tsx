@@ -566,6 +566,14 @@ class CoveyGameScene extends Phaser.Scene {
       },
     );
 
+    this.physics.add.overlap(
+      sprite,
+      minigameSprites,
+      (overlappingPlayer, minigameSprite) => {
+        this.infoTextBox?.setVisible(true);
+      },
+    );
+
     this.emitMovement({
       rotation: 'front',
       moving: false,
