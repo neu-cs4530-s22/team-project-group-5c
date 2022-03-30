@@ -378,6 +378,41 @@ class CoveyGameScene extends Phaser.Scene {
       // the map
     });
 
+    const minigameAreaObjects = map.filterObjects(
+      'Objects',
+      obj => obj.type === 'minigame',
+    )
+    const minigameSprites = map.createFromObjects(
+      'Objects',
+      minigameAreaObjects.map(obj => ({ id: obj.id })),
+    );
+    this.physics.world.enable(minigameSprites);
+    minigameSprites.forEach(minigame => {
+      const sprite = minigame as Phaser.GameObjects.Sprite;
+      sprite.y += sprite.displayHeight;
+      const labelText = this.add.text(
+        sprite.x - sprite.displayWidth / 2,
+        sprite.y,
+        minigame.name,
+        { color: '#FFFFFF', backgroundColor: '#000000' },
+      );
+      const topicText = this.add.text(
+        sprite.x - sprite.displayWidth / 2,
+        sprite.y + sprite.displayHeight / 2,
+        '(MINI GAME)',
+        { color: '#000000' },
+      );
+      sprite.setTintFill();
+      sprite.setAlpha(0.3);
+
+      // this.conversationAreas.push({
+      //   labelText,
+      //   topicText,
+      //   sprite,
+      //   label: conversation.name,
+      // });
+    });
+
     const conversationAreaObjects = map.filterObjects(
       'Objects',
       obj => obj.type === 'conversation',
