@@ -23,6 +23,13 @@ type ConversationGameObjects = {
   conversationArea?: ConversationArea;
 };
 
+type MiniGameObjects = {
+  labelText: Phaser.GameObjects.Text;
+  topicText: Phaser.GameObjects.Text;
+  sprite: Phaser.GameObjects.Sprite;
+  label: string;
+}
+
 class CoveyGameScene extends Phaser.Scene {
   private player?: {
     sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -34,6 +41,8 @@ class CoveyGameScene extends Phaser.Scene {
   private players: Player[] = [];
 
   private conversationAreas: ConversationGameObjects[] = [];
+
+  private minigameAreas: MiniGameObjects[] = [];
 
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys[] = [];
 
@@ -56,7 +65,11 @@ class CoveyGameScene extends Phaser.Scene {
 
   private currentConversationArea?: ConversationGameObjects;
 
+  private currentMinigameArea?: MiniGameObjects;
+
   private infoTextBox?: Phaser.GameObjects.Text;
+
+  private minigameTextBox?: Phaser.GameObjects.Text;
 
   private setNewConversation: (conv: ConversationArea) => void;
 
@@ -313,6 +326,17 @@ class CoveyGameScene extends Phaser.Scene {
             this.lastLocation.conversationLabel = undefined;
           }
         }
+        if (this.currentMinigameArea) {
+          if (
+            !Phaser.Geom.Rectangle.Overlaps(
+              this.currentMinigameArea.sprite.getBounds(),
+              this.player.sprite.getBounds(),
+            )
+          ) {
+            this.minigameTextBox?.setVisible(false);
+            this.currentMinigameArea = undefined;
+          }
+        }
         this.emitMovement(this.lastLocation);
       }
     }
@@ -405,12 +429,12 @@ class CoveyGameScene extends Phaser.Scene {
       sprite.setTintFill();
       sprite.setAlpha(0.3);
 
-      // this.conversationAreas.push({
-      //   labelText,
-      //   topicText,
-      //   sprite,
-      //   label: conversation.name,
-      // });
+      this.minigameAreas.push({
+        labelText,
+        topicText,
+        sprite,
+        label: minigame.name,
+      });
     });
 
     const conversationAreaObjects = map.filterObjects(
@@ -459,6 +483,18 @@ class CoveyGameScene extends Phaser.Scene {
       .setDepth(30);
     this.infoTextBox.setVisible(false);
     this.infoTextBox.x = this.game.scale.width / 2 - this.infoTextBox.width / 2;
+
+    this.minigameTextBox = this.add
+      .text(
+        this.game.scale.width / 2,
+        this.game.scale.height / 2,
+        "You've found an empty minigame area!\nStart the game by pressing the spacebar.",
+        { color: '#000000', backgroundColor: '#FFFFFF' },
+      )
+      .setScrollFactor(0)
+      .setDepth(30);
+    this.minigameTextBox.setVisible(false);
+    this.minigameTextBox.x = this.game.scale.width / 2 - this.minigameTextBox.width / 2;
 
     const labels = map.filterObjects('Objects', obj => obj.name === 'label');
     labels.forEach(label => {
@@ -570,7 +606,10 @@ class CoveyGameScene extends Phaser.Scene {
       sprite,
       minigameSprites,
       (overlappingPlayer, minigameSprite) => {
-        this.infoTextBox?.setVisible(true);
+        const minigameLabel = minigameSprite.name;
+        const minigame = this.minigameAreas.find(mg => mg.label === minigameLabel);
+        this.currentMinigameArea = minigame;
+        this.minigameTextBox?.setVisible(true);
       },
     );
 
