@@ -31,6 +31,17 @@ export default abstract class MiniGame {
         return this._players;
     }
 
+    set players(players : Player[]) {
+        this._players = players;
+    }
+
+    /**
+     * Check the game whether single players game or not
+     */
+    get isSingle(): boolean {
+        return this._isSingle;
+    }
+
     /**
      * Get the name of the game
      */
