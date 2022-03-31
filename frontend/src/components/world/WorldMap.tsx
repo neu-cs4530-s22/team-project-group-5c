@@ -11,6 +11,7 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
+import NewGameModal from './NewGameModal';
 
 // Original inspiration and code from:
 // https://medium.com/@michaelwesthadley/modular-game-worlds-in-phaser-3-tilemaps-1-958fc7e6bbd6
@@ -601,7 +602,8 @@ class CoveyGameScene extends Phaser.Scene {
         }
       },
     );
-
+    
+    // TODO: Missing  checking if valid game area like above (need gameArea object for that)
     this.physics.add.overlap(
       sprite,
       minigameSprites,
@@ -609,6 +611,13 @@ class CoveyGameScene extends Phaser.Scene {
         const minigameLabel = minigameSprite.name;
         const minigame = this.minigameAreas.find(mg => mg.label === minigameLabel);
         this.currentMinigameArea = minigame;
+        if (cursorKeys.space.isDown) {
+          const newConversation = new ConversationArea(
+            'aa',
+            BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
+          );
+          this.setNewConversation(newConversation);
+        }
         this.minigameTextBox?.setVisible(true);
       },
     );
@@ -807,6 +816,34 @@ export default function WorldMap(): JSX.Element {
     }
   }, [video, newConversationModalOpen]);
 
+  // BEGINNNNNNNNNNNNN:::::::::::::::::::::::::::::::::::::::::::::
+  const newGameModalOpen = newConversation !== undefined;
+  useEffect(() => {
+    if (newGameModalOpen) {
+      video?.pauseGame();
+    } else {
+      video?.unPauseGame();
+    }
+  }, [video, newConversationModalOpen]);
+
+  const newGameModal = useMemo(() => {
+    if (newConversation) {
+      video?.pauseGame();
+      return (
+        <NewGameModal
+          isOpen={newConversation !== undefined}
+          closeModal={() => {
+            video?.unPauseGame();
+            setNewConversation(undefined);
+          }}
+          newConversation={newConversation}
+        />
+      );
+    }
+    return <></>;
+  }, [video, newConversation, setNewConversation]);
+    // ENDDDDDDDDDDDDD:::::::::::::::::::::::::::::::::::::::::::::
+
   const newConversationModal = useMemo(() => {
     if (newConversation) {
       video?.pauseGame();
@@ -827,6 +864,7 @@ export default function WorldMap(): JSX.Element {
   return (
     <div id='app-container'>
       {newConversationModal}
+      {newGameModal}
       <div id='map-container' />
       <div id='social-container'>
         <SocialSidebar />
