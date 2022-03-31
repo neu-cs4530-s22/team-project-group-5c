@@ -11,6 +11,8 @@ export default abstract class MiniGame {
 
     private _players : Player[] = [];
 
+
+
     // There is enough space to join the game or not
     private _isOccupied = false;
 
@@ -52,6 +54,30 @@ export default abstract class MiniGame {
      */
     get isOccupied(): boolean {
         return this._isOccupied;
+    }
+
+    /**
+     * Returns the host or the first player
+     * @returns the host player
+     */
+    getHost(): Player {
+        return this._players[0];
+    }
+
+    /**
+     * Returns the guest or second player
+     * @returns the guest player
+     */
+    getGuest(): Player {
+        return this._players[1];
+    }
+
+    /**
+     * Adds the player to the game
+     * @param player the player to be added
+     */
+    addPlayer(player: Player): void {
+        this._players.push(player);
     }
 
     /**

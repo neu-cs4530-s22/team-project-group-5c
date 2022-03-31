@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import React, { useEffect, useMemo, useState } from 'react';
 import BoundingBox from '../../classes/BoundingBox';
 import ConversationArea from '../../classes/ConversationArea';
+import MinigameArea from '../../classes/MinigameArea';
 import Player, { ServerPlayer, UserLocation } from '../../classes/Player';
 import Video from '../../classes/Video/Video';
 import useConversationAreas from '../../hooks/useConversationAreas';
@@ -11,6 +12,8 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
+import TicTacToeModel from '../../classes/TicTacToeModel';
+import NewMinigameModal from './NewMinigameModal';
 
 // Original inspiration and code from:
 // https://medium.com/@michaelwesthadley/modular-game-worlds-in-phaser-3-tilemaps-1-958fc7e6bbd6
@@ -28,6 +31,7 @@ type MiniGameObjects = {
   topicText: Phaser.GameObjects.Text;
   sprite: Phaser.GameObjects.Sprite;
   label: string;
+  minigameArea?: MinigameArea;
 }
 
 class CoveyGameScene extends Phaser.Scene {
@@ -69,9 +73,13 @@ class CoveyGameScene extends Phaser.Scene {
 
   private infoTextBox?: Phaser.GameObjects.Text;
 
-  private minigameTextBox?: Phaser.GameObjects.Text;
+  private joinMinigameTextBox?: Phaser.GameObjects.Text;
+
+  private occupiedMinigameTextBox?: Phaser.GameObjects.Text;
 
   private setNewConversation: (conv: ConversationArea) => void;
+
+  private setNewMinigame: (minigame: MinigameArea) => void;
 
   private _onGameReadyListeners: Callback[] = [];
 
@@ -79,6 +87,7 @@ class CoveyGameScene extends Phaser.Scene {
     video: Video,
     emitMovement: (loc: UserLocation) => void,
     setNewConversation: (conv: ConversationArea) => void,
+    setNewMinigame: (minigame: MinigameArea) => void,
     myPlayerID: string,
   ) {
     super('PlayGame');
@@ -86,6 +95,7 @@ class CoveyGameScene extends Phaser.Scene {
     this.emitMovement = emitMovement;
     this.myPlayerID = myPlayerID;
     this.setNewConversation = setNewConversation;
+    this.setNewMinigame = setNewMinigame;
   }
 
   preload() {
@@ -246,7 +256,7 @@ class CoveyGameScene extends Phaser.Scene {
       return;
     }
     if (this.player && this.cursors) {
-      const speed = 175;
+      const speed = 2000;
 
       const prevVelocity = this.player.sprite.body.velocity.clone();
       const body = this.player.sprite.body as Phaser.Physics.Arcade.Body;
@@ -333,7 +343,8 @@ class CoveyGameScene extends Phaser.Scene {
               this.player.sprite.getBounds(),
             )
           ) {
-            this.minigameTextBox?.setVisible(false);
+            this.joinMinigameTextBox?.setVisible(false);
+            this.occupiedMinigameTextBox?.setVisible(false);
             this.currentMinigameArea = undefined;
           }
         }
@@ -484,7 +495,7 @@ class CoveyGameScene extends Phaser.Scene {
     this.infoTextBox.setVisible(false);
     this.infoTextBox.x = this.game.scale.width / 2 - this.infoTextBox.width / 2;
 
-    this.minigameTextBox = this.add
+    this.joinMinigameTextBox = this.add
       .text(
         this.game.scale.width / 2,
         this.game.scale.height / 2,
@@ -493,8 +504,20 @@ class CoveyGameScene extends Phaser.Scene {
       )
       .setScrollFactor(0)
       .setDepth(30);
-    this.minigameTextBox.setVisible(false);
-    this.minigameTextBox.x = this.game.scale.width / 2 - this.minigameTextBox.width / 2;
+    this.joinMinigameTextBox.setVisible(false);
+    this.joinMinigameTextBox.x = this.game.scale.width / 2 - this.joinMinigameTextBox.width / 2;
+
+    this.occupiedMinigameTextBox = this.add
+      .text(
+        this.game.scale.width / 2,
+        this.game.scale.height / 2,
+        "This game is already occupied!\nFind another game area or wait here.",
+        { color: '#000000', backgroundColor: '#FFFFFF' },
+      )
+      .setScrollFactor(0)
+      .setDepth(30);
+    this.occupiedMinigameTextBox.setVisible(false);
+    this.occupiedMinigameTextBox.x = this.game.scale.width / 2 - this.occupiedMinigameTextBox.width / 2;
 
     const labels = map.filterObjects('Objects', obj => obj.name === 'label');
     labels.forEach(label => {
@@ -609,7 +632,57 @@ class CoveyGameScene extends Phaser.Scene {
         const minigameLabel = minigameSprite.name;
         const minigame = this.minigameAreas.find(mg => mg.label === minigameLabel);
         this.currentMinigameArea = minigame;
-        this.minigameTextBox?.setVisible(true);
+        // If there is an existing minigameArea (meaning there is at least a host)
+        // display the corresponding textbox
+        console.log(`test undefined minigamearea: ${minigame?.minigameArea}`)
+        if (minigame?.minigameArea) {
+          console.log("There is at least 1 player");
+          // There is a host and a guest, but the host has not started the game yet
+          if (minigame.minigameArea.minigame.players.length === 2) {
+            this.occupiedMinigameTextBox?.setVisible(true);
+            this.joinMinigameTextBox?.setVisible(false);
+          } 
+          // There is a host but not both players
+          else {
+            if (cursorKeys.space.isDown) {
+              const myPlayer = this.players.find(p => p.id === this.myPlayerID);
+              const updatedMinigameArea = this.currentMinigameArea?.minigameArea;
+              if (myPlayer && updatedMinigameArea) {
+                updatedMinigameArea?.minigame.addPlayer(myPlayer);
+                console.log("PLAYER LENGTH");
+                console.log(updatedMinigameArea.minigame.players.length);
+                this.setNewMinigame(updatedMinigameArea);
+              }
+            }
+            this.occupiedMinigameTextBox?.setVisible(false);
+            this.joinMinigameTextBox?.setVisible(true);
+          }
+          const localLastLocation = this.lastLocation;
+          if(localLastLocation && localLastLocation.minigameLabel !== minigame.minigameArea.label){
+            localLastLocation.minigameLabel = minigame.minigameArea.label;
+            this.emitMovement(localLastLocation);
+          }
+        } else {
+          // There is not an existing minigameArea. Create one if the spacebar button is pressed.
+          // The default for no minigameArea will show the joinMinigameTextBox
+          if (cursorKeys.space.isDown) {
+            const myPlayer = this.players.find(p => p.id === this.myPlayerID);
+            if (myPlayer) {
+              const newMinigameArea = new MinigameArea(
+                BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
+                minigameLabel,
+                new TicTacToeModel(
+                  false,
+                  [myPlayer],
+                  false
+                ),
+              );
+              this.setNewMinigame(newMinigameArea);
+            }
+          }
+          this.occupiedMinigameTextBox?.setVisible(false);
+          this.joinMinigameTextBox?.setVisible(true);
+        }
       },
     );
 
@@ -741,6 +814,7 @@ export default function WorldMap(): JSX.Element {
   const conversationAreas = useConversationAreas();
   const [gameScene, setGameScene] = useState<CoveyGameScene>();
   const [newConversation, setNewConversation] = useState<ConversationArea>();
+  const [newMinigame, setNewMinigame] = useState<MinigameArea>();
   const playerMovementCallbacks = usePlayerMovement();
   const players = usePlayersInTown();
 
@@ -765,7 +839,7 @@ export default function WorldMap(): JSX.Element {
 
     const game = new Phaser.Game(config);
     if (video) {
-      const newGameScene = new CoveyGameScene(video, emitMovement, setNewConversation, myPlayerID);
+      const newGameScene = new CoveyGameScene(video, emitMovement, setNewConversation, setNewMinigame, myPlayerID);
       setGameScene(newGameScene);
       game.scene.add('coveyBoard', newGameScene, true);
       video.pauseGame = () => {
@@ -778,7 +852,7 @@ export default function WorldMap(): JSX.Element {
     return () => {
       game.destroy(true);
     };
-  }, [video, emitMovement, setNewConversation, myPlayerID]);
+  }, [video, emitMovement, setNewConversation, setNewMinigame, myPlayerID]);
 
   useEffect(() => {
     const movementDispatcher = (player: ServerPlayer) => {
@@ -824,9 +898,45 @@ export default function WorldMap(): JSX.Element {
     return <></>;
   }, [video, newConversation, setNewConversation]);
 
+  const newMinigameModal = useMemo(() => {
+    const myPlayer = players.find(p => p.id === myPlayerID);
+    let bodyMessage = "";
+    let isStartButtonVisible = false;
+
+    console.log(newMinigame?.minigame.players.length);
+
+    if (myPlayer === newMinigame?.minigame.players[0]) {
+      bodyMessage = "Waiting for second player to connect ...";
+      if (newMinigame?.minigame.players.length === 2) {
+        bodyMessage = `${newMinigame.minigame.getGuest} has joined the lobby. You can now start the game.`
+        isStartButtonVisible = true;
+      }
+    } else {
+      bodyMessage = `Waiting for host ${newMinigame?.minigame.getHost} to start ...`;
+    }
+
+    if (newMinigame) {
+      video?.pauseGame();
+      return (
+        <NewMinigameModal
+          isOpen={newMinigame !== undefined}
+          bodyMessage={bodyMessage}
+          isStartButtonVisible={isStartButtonVisible}
+          closeModal={() => {
+            video?.unPauseGame();
+            setNewMinigame(undefined);
+          }}
+          newMinigameArea={newMinigame}
+        />
+      );
+    }
+    return <></>;
+  }, [newMinigame, video, setNewMinigame]);
+
   return (
     <div id='app-container'>
       {newConversationModal}
+      {newMinigameModal}
       <div id='map-container' />
       <div id='social-container'>
         <SocialSidebar />
