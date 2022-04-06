@@ -14,6 +14,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import './App.css';
 import ConversationArea, { ServerConversationArea } from './classes/ConversationArea';
+import MinigameArea, { ServerMinigameArea } from './classes/MinigameArea';
 import Player, { ServerPlayer, UserLocation } from './classes/Player';
 import TownsServiceClient, { TownJoinResponse } from './classes/TownsServiceClient';
 import Video from './classes/Video/Video';
@@ -30,6 +31,7 @@ import VideoOverlay from './components/VideoCall/VideoOverlay/VideoOverlay';
 import WorldMap from './components/world/WorldMap';
 import ConversationAreasContext from './contexts/ConversationAreasContext';
 import CoveyAppContext from './contexts/CoveyAppContext';
+import MinigameAreasContext from './contexts/MinigameAreasContext';
 import NearbyPlayersContext from './contexts/NearbyPlayersContext';
 import PlayerMovementContext, { PlayerMovementCallback } from './contexts/PlayerMovementContext';
 import PlayersInTownContext from './contexts/PlayersInTownContext';
@@ -130,6 +132,7 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
   const [nearbyPlayers, setNearbyPlayers] = useState<Player[]>([]);
   // const [currentLocation, setCurrentLocation] = useState<UserLocation>({moving: false, rotation: 'front', x: 0, y: 0});
   const [conversationAreas, setConversationAreas] = useState<ConversationArea[]>([]);
+  const [minigameAreas, setMinigameAreas] = useState<MinigameArea[]>([]);
 
   const setupGameController = useCallback(
     async (initData: TownJoinResponse) => {
@@ -154,9 +157,13 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
       let localConversationAreas = initData.conversationAreas.map(sa =>
         ConversationArea.fromServerConversationArea(sa),
       );
+      let localMinigameAreas = initData.minigameAreas.map(mg => 
+        MinigameArea.fromServerMinigameArea(mg)
+      );
       let localNearbyPlayers: Player[] = [];
       setPlayersInTown(localPlayers);
       setConversationAreas(localConversationAreas);
+      setMinigameAreas(localMinigameAreas);
       setNearbyPlayers(localNearbyPlayers);
 
       const recalculateNearbyPlayers = () => {
@@ -236,6 +243,33 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
         setConversationAreas(localConversationAreas);
         recalculateNearbyPlayers();
       });
+      // Socket runs this when it receives a 'minigameAreaUpdated' from the server 
+      socket.on('minigameAreaUpdated', (_minigameArea: ServerMinigameArea) => {
+        const updatedMinigameArea = localMinigameAreas.find(m => m.label === _minigameArea.label);
+        if (updatedMinigameArea) {
+          updatedMinigameArea.minigame = _minigameArea.minigame as string;
+          updatedMinigameArea.playersByID = _minigameArea.playersByID;
+        } else {
+          localMinigameAreas = localMinigameAreas.concat([
+            MinigameArea.fromServerMinigameArea(_minigameArea),
+          ]);
+        }
+        // Every time the local minigame areas is updated, the App Context updates the useMinigameAreas() hook
+        setMinigameAreas(localMinigameAreas);
+        recalculateNearbyPlayers();
+      });
+      // Socket runs this when it receives a 'minigameAreaDestroyed' from the server 
+      socket.on('minigameAreaDestroyed', (_minigameArea: ServerMinigameArea) => {
+        const existingMinigameArea = localMinigameAreas.find(mg => mg.label === _minigameArea.label);
+        if (existingMinigameArea){
+          // This will tell the listeners for the area that the minigame area is destroyed 
+          existingMinigameArea.emitListenersDestroyArea();
+          existingMinigameArea.playersByID = [];
+        }
+        localMinigameAreas = localMinigameAreas.filter(mg => mg.label !== _minigameArea.label);
+        setMinigameAreas(localMinigameAreas);
+        recalculateNearbyPlayers();
+      });
       dispatchAppUpdate({
         action: 'doConnect',
         data: {
@@ -294,7 +328,9 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
             <PlayersInTownContext.Provider value={playersInTown}>
               <NearbyPlayersContext.Provider value={nearbyPlayers}>
                 <ConversationAreasContext.Provider value={conversationAreas}>
-                  {page}
+                  <MinigameAreasContext.Provider value={minigameAreas}>
+                    {page}
+                  </MinigameAreasContext.Provider>
                 </ConversationAreasContext.Provider>
               </NearbyPlayersContext.Provider>
             </PlayersInTownContext.Provider>

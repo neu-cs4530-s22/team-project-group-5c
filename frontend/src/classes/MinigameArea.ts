@@ -1,17 +1,17 @@
 import BoundingBox from "./BoundingBox";
 import MiniGame from "./MiniGame";
-import Player from "./Player";
 
 export type ServerMinigameArea = {
     label: string;
-    occupantsByID: string[];
+    playersByID: string[];
     boundingBox: BoundingBox;
-    minigame: MiniGame;
-};
+    minigame?: string;
+  };
 
 export type MinigameAreaListener = {
     // don't need topic change
-    onOccupantsChange?: (newOccupants: string[]) => void;
+    onPlayersChange?: (newPlayersByID: string[]) => void;
+    onMinigameAreaDestroyed?: () => void;
 };
 export default class MinigameArea {
     private _boundingBox: BoundingBox;
@@ -21,13 +21,13 @@ export default class MinigameArea {
 
     private _label : string;
 
-    private _occupants: string[] = [];
+    private _playersByID: string[] = [];
     
     private _listeners: MinigameAreaListener[] = [];
 
-    private _minigame : MiniGame;
+    private _minigame : string;
 
-    constructor(boudingBox: BoundingBox, label: string, minigame: MiniGame) {
+    constructor(boudingBox: BoundingBox, label: string, minigame: string) {
         this._boundingBox = boudingBox;
         this._label = label;
         this._minigame = minigame;
@@ -37,32 +37,43 @@ export default class MinigameArea {
         return this._label;
     }
 
-    set occupants(newOccupants: string[]) {
-        if(newOccupants.length !== this._occupants.length || !newOccupants.every((val, index) => val === this._occupants[index])){
-            this._listeners.forEach(listener => listener.onOccupantsChange?.(newOccupants));
-            this._occupants = newOccupants;
+    set playersByID(newPlayersByID: string[]) {
+        if(newPlayersByID.length !== this._playersByID.length || !newPlayersByID.every((val, index) => val === this._playersByID[index])){
+            // Calls this minigame area's listeners here to update players list
+            this._listeners.forEach((listener: MinigameAreaListener) => {
+                listener.onPlayersChange?.(newPlayersByID);
+            })
+            this._playersByID = newPlayersByID;
         }
     }
 
-    get occupants() {
-        return this._occupants;
+    get playersByID() {
+        return this._playersByID;
     }
 
     get minigame() {
         return this._minigame;
     }
 
+    set minigame(minigame: string) {
+        this._minigame = minigame;
+    }
+
     getBoundingBox(): BoundingBox {
         return this._boundingBox;
     }
 
-    toServerConversationArea(): ServerMinigameArea {
+    toServerMinigameArea(): ServerMinigameArea {
         return {
             label: this.label,
-            occupantsByID: this.occupants,
+            playersByID: this._playersByID,
             boundingBox: this.getBoundingBox(),
-            minigame: this.minigame,
+            minigame: "replace with actual minigame",
         };
+    }
+
+    addPlayerID(playerId: string): void {
+        this._playersByID.push(playerId);
     }
 
     addListener(listener: MinigameAreaListener) {
@@ -75,14 +86,22 @@ export default class MinigameArea {
     
     copy() : MinigameArea{
         const ret = new MinigameArea(this._boundingBox, this.label, this.minigame);
-        ret.occupants = this.occupants.concat([]);
+        ret._playersByID = this._playersByID.concat([]);
         this._listeners.forEach(listener => ret.addListener(listener));
         return ret;
     }
+
+    listenersLength() : number {
+        return this._listeners.length;
+    }
+
+    emitListenersDestroyArea(): void {
+        this._listeners.forEach((listener: MinigameAreaListener) => listener.onMinigameAreaDestroyed?.());
+    }
     
     static fromServerMinigameArea(serverArea: ServerMinigameArea): MinigameArea {
-        const ret = new MinigameArea(BoundingBox.fromStruct(serverArea.boundingBox), serverArea.label, serverArea.minigame);
-        ret.occupants = serverArea.occupantsByID;
+        const ret = new MinigameArea(BoundingBox.fromStruct(serverArea.boundingBox), serverArea.label, serverArea.minigame as string);
+        ret._playersByID = serverArea.playersByID;
         return ret;
     }
 
@@ -96,20 +115,20 @@ export default class MinigameArea {
      * @param player a player want to join the minigame
      * @returns boolean whether player can join the minigame or not 
      */
-     joinGame(player: Player): boolean {
-        if (this.minigame.isOccupied) {
-            return false;
-        }
+    // joinGame(player: Player): boolean {
+    //     if (this.minigame.isOccupied) {
+    //         return false;
+    //     }
         
-        if ((this.minigame.isSingle && this.minigame.players.length === 0) || (!this.minigame.isSingle && this.minigame.players.length < 2)) {
-            const currentPlayers : Player[] = this.minigame.players;
-            currentPlayers.push(player);
-            this.minigame.players = currentPlayers;
-            if ((this.minigame.isSingle && this.minigame.players.length === 1) || (!this.minigame.isSingle && this.minigame.players.length === 2)) {
-                this.minigame.checkOccupied();
-            }
-            return true;
-        }
-        return false;
-    }
+    //     if ((this.minigame.isSingle && this.minigame.players.length === 0) || (!this.minigame.isSingle && this.minigame.players.length < 2)) {
+    //         const currentPlayers : Player[] = this.minigame.players;
+    //         currentPlayers.push(player);
+    //         this.minigame.players = currentPlayers;
+    //         if ((this.minigame.isSingle && this.minigame.players.length === 1) || (!this.minigame.isSingle && this.minigame.players.length === 2)) {
+    //             this.minigame.checkOccupied();
+    //         }
+    //         return true;
+    //     }
+    //     return false;
+    // }
 }

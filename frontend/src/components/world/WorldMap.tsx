@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useToast } from '@chakra-ui/react';
 import BoundingBox from '../../classes/BoundingBox';
 import ConversationArea from '../../classes/ConversationArea';
 import MinigameArea from '../../classes/MinigameArea';
@@ -12,8 +13,8 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
-import TicTacToeModel from '../../classes/TicTacToeModel';
 import NewMinigameModal from './NewMinigameModal';
+import useMinigameAreas from '../../hooks/useMinigameAreas';
 
 // Original inspiration and code from:
 // https://medium.com/@michaelwesthadley/modular-game-worlds-in-phaser-3-tilemaps-1-958fc7e6bbd6
@@ -81,6 +82,8 @@ class CoveyGameScene extends Phaser.Scene {
 
   private setNewMinigame: (minigame: MinigameArea) => void;
 
+  private setCreateMinigame: (createMinigame: boolean) => void;
+
   private _onGameReadyListeners: Callback[] = [];
 
   constructor(
@@ -88,6 +91,7 @@ class CoveyGameScene extends Phaser.Scene {
     emitMovement: (loc: UserLocation) => void,
     setNewConversation: (conv: ConversationArea) => void,
     setNewMinigame: (minigame: MinigameArea) => void,
+    setCreateMinigame: (createMinigame: boolean) => void,
     myPlayerID: string,
   ) {
     super('PlayGame');
@@ -96,6 +100,7 @@ class CoveyGameScene extends Phaser.Scene {
     this.myPlayerID = myPlayerID;
     this.setNewConversation = setNewConversation;
     this.setNewMinigame = setNewMinigame;
+    this.setCreateMinigame = setCreateMinigame;
   }
 
   preload() {
@@ -159,6 +164,42 @@ class CoveyGameScene extends Phaser.Scene {
       const serverArea = conversationAreas?.find(a => a.label === eachArea.label);
       if (!serverArea) {
         eachArea.conversationArea = undefined;
+      }
+    });
+  }
+
+  /**
+   * Update the WorldMap's view of the current minigame areas based on the minigameAreas passed from the server.
+   * Updates the minigame areas in the WorldMap.
+   */
+  updateMinigameAreas(minigameAreas: MinigameArea[]) {
+    if (!this.ready) {
+      /*
+       * Due to the asynchronous nature of setting up a Phaser game scene (it requires gathering
+       * some resources using asynchronous operations), it is possible that this could be called
+       * in the period between when the player logs in and when the game is ready. Hence, we
+       * register a callback to complete the initialization once the game is ready
+       */
+      this._onGameReadyListeners.push(() => {
+        this.updateMinigameAreas(minigameAreas);
+      });
+      return;
+    }
+    minigameAreas.forEach(eachNewArea => {
+      const existingArea = this.minigameAreas.find(area => area.label === eachNewArea.label);
+      // TODO - if it becomes necessary to support new minigame areas (dynamically created), need to create sprites here to enable rendering on phaser
+      // assert(existingArea);
+      if (existingArea) {
+        // assert(!existingArea.conversationArea);
+        // Connects minigame objects to minigame areas from the server 
+        existingArea.minigameArea = eachNewArea;
+      }
+    });
+    // If the minigame area is removed from the server, it will be updated here
+    this.minigameAreas.forEach(eachArea => {
+      const serverArea = minigameAreas.find(a => a.label === eachArea.label);
+      if (!serverArea) {
+        eachArea.minigameArea = undefined;
       }
     });
   }
@@ -251,12 +292,22 @@ class CoveyGameScene extends Phaser.Scene {
     return undefined;
   }
 
+  /**
+   * This function is used to remove a player from a minigame by updating the minigame label in their location to be undefined 
+   */
+  updatePlayerMinigameLocation() {
+    if (this.lastLocation) {
+      this.lastLocation.minigameLabel = undefined;
+      this.emitMovement(this.lastLocation);
+    }
+  }
+
   update() {
     if (this.paused) {
       return;
     }
     if (this.player && this.cursors) {
-      const speed = 2000;
+      const speed = 550;
 
       const prevVelocity = this.player.sprite.body.velocity.clone();
       const body = this.player.sprite.body as Phaser.Physics.Arcade.Body;
@@ -336,6 +387,7 @@ class CoveyGameScene extends Phaser.Scene {
             this.lastLocation.conversationLabel = undefined;
           }
         }
+        // Current minigame area is populated when they walk into an area
         if (this.currentMinigameArea) {
           if (
             !Phaser.Geom.Rectangle.Overlaps(
@@ -343,11 +395,14 @@ class CoveyGameScene extends Phaser.Scene {
               this.player.sprite.getBounds(),
             )
           ) {
+            // When they walk out of an area, the current location is updated so the minigame label is undefined 
             this.joinMinigameTextBox?.setVisible(false);
             this.occupiedMinigameTextBox?.setVisible(false);
             this.currentMinigameArea = undefined;
+            this.lastLocation.minigameLabel = undefined;
           }
         }
+        // emitMovement emits a 'playerMovement' on the socket which is read by the server
         this.emitMovement(this.lastLocation);
       }
     }
@@ -495,6 +550,7 @@ class CoveyGameScene extends Phaser.Scene {
     this.infoTextBox.setVisible(false);
     this.infoTextBox.x = this.game.scale.width / 2 - this.infoTextBox.width / 2;
 
+    // Seperate textBoxes are added to the game scene for when a user finds a new game vs. an occupied game
     this.joinMinigameTextBox = this.add
       .text(
         this.game.scale.width / 2,
@@ -625,6 +681,7 @@ class CoveyGameScene extends Phaser.Scene {
       },
     );
 
+    // This defines the functionality for when a user overlaps with a minigame area 
     this.physics.add.overlap(
       sprite,
       minigameSprites,
@@ -634,51 +691,47 @@ class CoveyGameScene extends Phaser.Scene {
         this.currentMinigameArea = minigame;
         // If there is an existing minigameArea (meaning there is at least a host)
         // display the corresponding textbox
-        console.log(`test undefined minigamearea: ${minigame?.minigameArea}`)
         if (minigame?.minigameArea) {
-          console.log("There is at least 1 player");
-          // There is a host and a guest, but the host has not started the game yet
-          if (minigame.minigameArea.minigame.players.length === 2) {
+          // There is a host and a guest
+          if (minigame.minigameArea.playersByID.length === 2) {
             this.occupiedMinigameTextBox?.setVisible(true);
             this.joinMinigameTextBox?.setVisible(false);
           } 
           // There is a host but not both players
           else {
             if (cursorKeys.space.isDown) {
-              const myPlayer = this.players.find(p => p.id === this.myPlayerID);
-              const updatedMinigameArea = this.currentMinigameArea?.minigameArea;
-              if (myPlayer && updatedMinigameArea) {
-                updatedMinigameArea?.minigame.addPlayer(myPlayer);
-                console.log("PLAYER LENGTH");
-                console.log(updatedMinigameArea.minigame.players.length);
+              const updatedMinigameArea = minigame?.minigameArea;
+              if (updatedMinigameArea) {
+                const localLastLocation = this.lastLocation;
+                // When a player clicks space to join the minigame, their location gets updated 
+                if(localLastLocation && localLastLocation.minigameLabel !== minigame.minigameArea.label){
+                  localLastLocation.minigameLabel = minigame.minigameArea.label;
+                  this.emitMovement(localLastLocation);
+                }
                 this.setNewMinigame(updatedMinigameArea);
+                this.setCreateMinigame(false);
               }
             }
             this.occupiedMinigameTextBox?.setVisible(false);
             this.joinMinigameTextBox?.setVisible(true);
           }
-          const localLastLocation = this.lastLocation;
-          if(localLastLocation && localLastLocation.minigameLabel !== minigame.minigameArea.label){
-            localLastLocation.minigameLabel = minigame.minigameArea.label;
-            this.emitMovement(localLastLocation);
-          }
         } else {
           // There is not an existing minigameArea. Create one if the spacebar button is pressed.
           // The default for no minigameArea will show the joinMinigameTextBox
           if (cursorKeys.space.isDown) {
-            const myPlayer = this.players.find(p => p.id === this.myPlayerID);
-            if (myPlayer) {
-              const newMinigameArea = new MinigameArea(
-                BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
-                minigameLabel,
-                new TicTacToeModel(
-                  false,
-                  [myPlayer],
-                  false
-                ),
-              );
-              this.setNewMinigame(newMinigameArea);
-            }
+            const newMinigameArea = new MinigameArea(
+              BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
+              minigameLabel,
+              // "new TicTacToeModel(
+              //   false,
+              //   [myPlayer],
+              //   false
+              // ),"
+              "tic tac toe"
+            );
+            this.setNewMinigame(newMinigameArea);
+            // Only the host can create a minigame
+            this.setCreateMinigame(true);
           }
           this.occupiedMinigameTextBox?.setVisible(false);
           this.joinMinigameTextBox?.setVisible(true);
@@ -809,14 +862,20 @@ class CoveyGameScene extends Phaser.Scene {
 }
 
 export default function WorldMap(): JSX.Element {
+  const {apiClient, sessionToken, currentTownID} = useCoveyAppState();
   const video = Video.instance();
   const { emitMovement, myPlayerID } = useCoveyAppState();
   const conversationAreas = useConversationAreas();
+  const minigameAreas = useMinigameAreas();
   const [gameScene, setGameScene] = useState<CoveyGameScene>();
   const [newConversation, setNewConversation] = useState<ConversationArea>();
   const [newMinigame, setNewMinigame] = useState<MinigameArea>();
   const playerMovementCallbacks = usePlayerMovement();
   const players = usePlayersInTown();
+  // const [newGameHost, setNewGameHost] = useState<boolean>(false);
+  const [createMinigame, setCreateMinigame] = useState<boolean>(false);
+  const [shouldEmitMinigameLocationMovement, setShouldEmitMinigameLocationMovement] = useState<boolean>(false);
+  const toast = useToast();
 
   useEffect(() => {
     const config = {
@@ -839,7 +898,7 @@ export default function WorldMap(): JSX.Element {
 
     const game = new Phaser.Game(config);
     if (video) {
-      const newGameScene = new CoveyGameScene(video, emitMovement, setNewConversation, setNewMinigame, myPlayerID);
+      const newGameScene = new CoveyGameScene(video, emitMovement, setNewConversation, setNewMinigame, setCreateMinigame, myPlayerID);
       setGameScene(newGameScene);
       game.scene.add('coveyBoard', newGameScene, true);
       video.pauseGame = () => {
@@ -864,6 +923,7 @@ export default function WorldMap(): JSX.Element {
     };
   }, [gameScene, playerMovementCallbacks]);
 
+  // Each of these useEffects will update the WorldMap's view of the objects when they change based on their respective hooks 
   useEffect(() => {
     gameScene?.updatePlayersLocations(players);
   }, [gameScene, players]);
@@ -871,6 +931,10 @@ export default function WorldMap(): JSX.Element {
   useEffect(() => {
     gameScene?.updateConversationAreas(conversationAreas);
   }, [conversationAreas, gameScene]);
+
+  useEffect(() => {
+    gameScene?.updateMinigameAreas(minigameAreas);
+  }, [minigameAreas, gameScene])
 
   const newConversationModalOpen = newConversation !== undefined;
   useEffect(() => {
@@ -894,44 +958,88 @@ export default function WorldMap(): JSX.Element {
           newConversation={newConversation}
         />
       );
-    }
+    } 
     return <></>;
   }, [video, newConversation, setNewConversation]);
 
-  const newMinigameModal = useMemo(() => {
-    const myPlayer = players.find(p => p.id === myPlayerID);
-    let bodyMessage = "";
-    let isStartButtonVisible = false;
-
-    console.log(newMinigame?.minigame.players.length);
-
-    if (myPlayer === newMinigame?.minigame.players[0]) {
-      bodyMessage = "Waiting for second player to connect ...";
-      if (newMinigame?.minigame.players.length === 2) {
-        bodyMessage = `${newMinigame.minigame.getGuest} has joined the lobby. You can now start the game.`
-        isStartButtonVisible = true;
-      }
+  const newMinigameModalOpen = newMinigame !== undefined;
+  useEffect(() => {
+    if (newMinigameModalOpen) {
+      video?.pauseGame();
     } else {
-      bodyMessage = `Waiting for host ${newMinigame?.minigame.getHost} to start ...`;
+      video?.unPauseGame();
     }
+  }, [video, newMinigameModalOpen]);
+
+  // Performs the API call to actually create the minigame on the server 
+  const createMinigameArea = useCallback(async () => {
+    const minigameToCreate = newMinigame;
+      try {
+        if (minigameToCreate) {
+          await apiClient.createMinigameArea({
+            coveyTownID: currentTownID,
+            sessionToken,
+            host: myPlayerID,
+            minigameArea: minigameToCreate.toServerMinigameArea(),
+          });
+          toast({
+            title: 'Minigame Created!',
+            status: 'success',
+          });
+        }
+      } catch (err) {
+        toast({
+          title: 'Unable to create minigame',
+          description: err.toString(),
+          status: 'error',
+        });
+      }
+  }, [newMinigame, apiClient, currentTownID, sessionToken, myPlayerID, toast]);
+
+  // Creates a minigame only when createMinigame is set to true. This happens when the host presses space to create the game. 
+  // TODO: this can be removed from the useEffect and put elsewhere.
+  useEffect(() => {
+    if (newMinigame && createMinigame) {
+      createMinigameArea();
+      setCreateMinigame(false);
+    }
+  }, [createMinigame, createMinigameArea, newMinigame]);
+
+  // This is used to remove a player from a minigame only when the boolean flag is set to true 
+  useEffect(() => {
+    if (shouldEmitMinigameLocationMovement) {
+      gameScene?.updatePlayerMinigameLocation();
+      setShouldEmitMinigameLocationMovement(false);
+    }
+  }, [shouldEmitMinigameLocationMovement, gameScene]);
+
+  const newMinigameModal = useMemo(() => {
+
+    video?.pauseGame();
 
     if (newMinigame) {
-      video?.pauseGame();
+      // if (newGameHost) {
+      //   if (!isNewMinigameCreated) {
+      //     createMinigameArea();
+      //   }
+      // }
+      const closeMinigameModal = () => {
+          video?.unPauseGame();
+          setNewMinigame(undefined);
+          setShouldEmitMinigameLocationMovement(true);
+      }
+
       return (
         <NewMinigameModal
           isOpen={newMinigame !== undefined}
-          bodyMessage={bodyMessage}
-          isStartButtonVisible={isStartButtonVisible}
-          closeModal={() => {
-            video?.unPauseGame();
-            setNewMinigame(undefined);
-          }}
-          newMinigameArea={newMinigame}
+          myPlayerID={myPlayerID}
+          closeModal={closeMinigameModal}
+          newMinigameLabel={newMinigame.label}
         />
       );
     }
     return <></>;
-  }, [newMinigame, video, setNewMinigame]);
+  }, [video, newMinigame, myPlayerID]);
 
   return (
     <div id='app-container'>

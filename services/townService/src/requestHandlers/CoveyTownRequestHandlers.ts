@@ -4,7 +4,7 @@ import Player from '../types/Player';
 import { ChatMessage, CoveyTownList, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
 import CoveyTownsStore from '../lib/CoveyTownsStore';
-import { ConversationAreaCreateRequest, ServerConversationArea } from '../client/TownsServiceClient';
+import { ConversationAreaCreateRequest, MinigameAreaCreateRequest, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 
 /**
  * The format of a request to join a Town in Covey.Town, as dispatched by the server middleware
@@ -37,6 +37,8 @@ export interface TownJoinResponse {
   isPubliclyListed: boolean;
   /** Conversation areas currently active in this town */
   conversationAreas: ServerConversationArea[];
+  /** Minigame areas currently active in this town */
+  minigameAreas: ServerMinigameArea[];
 }
 
 /**
@@ -122,6 +124,7 @@ export async function townJoinHandler(requestData: TownJoinRequest): Promise<Res
       friendlyName: coveyTownController.friendlyName,
       isPubliclyListed: coveyTownController.isPubliclyListed,
       conversationAreas: coveyTownController.conversationAreas,
+      minigameAreas: coveyTownController.minigameAreas,
     },
   };
 }
@@ -199,6 +202,31 @@ export function conversationAreaCreateHandler(_requestData: ConversationAreaCrea
 }
 
 /**
+ * A handler to create a minigame area based on the information in the request. 
+ * The intended flow of this handler is:
+ * * Fetch the town controller for the specified town ID
+ * * Validate that the sessionToken is valid for that town
+ * * Ask the TownController to create the minigame area
+ * @param _requestData Minigame area create request
+ */
+export function minigameAreaCreateHandler(_requestData: MinigameAreaCreateRequest): ResponseEnvelope<Record<string, null>> {
+  const townsStore = CoveyTownsStore.getInstance();
+  const townController = townsStore.getControllerForTown(_requestData.coveyTownID);
+  if (!townController?.getSessionByToken(_requestData.sessionToken)){
+    return {
+      isOK: false, response: {}, message: `Unable to create minigame area ${_requestData.minigameArea.label}`,
+    };
+  }
+  const success = townController.addMinigameArea(_requestData.minigameArea, _requestData.host);
+
+  return {
+    isOK: success,
+    response: {},
+    message: !success ? `Unable to create minigame area ${_requestData.minigameArea.label}` : undefined,
+  };
+}
+
+/**
  * An adapter between CoveyTownController's event interface (CoveyTownListener)
  * and the low-level network communication protocol
  *
@@ -224,6 +252,12 @@ function townSocketAdapter(socket: Socket): CoveyTownListener {
     },
     onConversationAreaUpdated(conversation: ServerConversationArea){
       socket.emit('conversationUpdated', conversation);
+    },
+    onMinigameAreaUpdated(minigame: ServerMinigameArea){
+      socket.emit('minigameAreaUpdated', minigame);
+    },
+    onMinigameAreaDestroyed(minigame: ServerMinigameArea){
+      socket.emit('minigameAreaDestroyed', minigame);
     },
     onChatMessage(message: ChatMessage){
       socket.emit('chatMessage', message);
