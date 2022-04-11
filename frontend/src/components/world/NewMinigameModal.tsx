@@ -7,11 +7,14 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+
+  useToast
   } from '@chakra-ui/react';
-  import React,{useEffect,useState } from 'react';
+  import React,{useCallback, useEffect,useState } from 'react';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
+import useCoveyAppState from '../../hooks/useCoveyAppState';
   
   
 type NewMinigameWaitingProps = {
@@ -27,7 +30,10 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   const [playersByID, setPlayersByID] = useState<string[]>(minigameArea.playersByID);
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
+  const {apiClient, sessionToken, currentTownID} = useCoveyAppState();
 
+  const toast = useToast()
+  const video = useMaybeVideo()
   // Sets the listeners of the minigame area to perform the operations whenever they are called 
   // onPlayersChange will set the players list based on what is passed in
   // onMinigameAreaDestroyed will run the closeModal() operation which will remove them from the mini game area 
@@ -61,12 +67,38 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
     }
   }, [myPlayerID, playersByID]);
 
+  const createTicTacToe = useCallback(async () => {
+    // if (topic) {
+        const minigameToCreate = minigameArea;
+        // conversationToCreate.topic = topic;
+      try {
+        await apiClient.createMinigameArea({
+          sessionToken,
+          coveyTownID: currentTownID,
+          host: playersByID[0],
+          minigameArea: minigameToCreate.toServerMinigameArea(),
+        });
+        toast({
+          title: 'Minigame Created!',
+          status: 'success',
+        });
+        video?.unPauseGame();
+        closeModal();
+      } catch (err) {
+        toast({
+          title: 'Unable to start minigame',
+          description: err.toString(),
+          status: 'error',
+        });
+      
+    }
+  }, [apiClient, minigameArea, closeModal, currentTownID, sessionToken, toast, video]);
 
 
 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader><ModalBody>{bodyMessage}</ModalBody><ModalCloseButton /><ModalFooter>
-      <Button onClick={closeModal} hidden={isStartButtonHidden}>Start Game</Button>
+      <Button onClick={createTicTacToe} hidden={isStartButtonHidden}>Start Game</Button>
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter></>
   );

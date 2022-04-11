@@ -68,7 +68,8 @@ export default class MinigameArea {
             label: this.label,
             playersByID: this._playersByID,
             boundingBox: this.getBoundingBox(),
-            minigame: "replace with actual minigame",
+            minigame: this.minigame
+            // minigame: "replace with actual minigame",
         };
     }
 
