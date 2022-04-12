@@ -15,6 +15,7 @@ import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
+import { Game } from '../TicTacToe'
   
   
 type NewMinigameWaitingProps = {
@@ -31,6 +32,8 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
   const {apiClient, sessionToken, currentTownID} = useCoveyAppState();
+  const [isGame, setGame] = useState<boolean>(false);
+  const [isGameStarted, setGameStarted] = useState<boolean>(false);
 
   const toast = useToast()
   const video = useMaybeVideo()
@@ -62,10 +65,13 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
       setBodyMessage(`${playersByID[1]} has joined the lobby. You can now start the game.`);
       setIsStartButtonHidden(false);
     } 
-    else { // Guest
+    else if (playersByID.length === 2) { // Guest
       setBodyMessage(`Waiting for host ${playersByID[0]} to start ...`);
+      
+    } else if (isGame) {
+      setGameStarted(true);
     }
-  }, [myPlayerID, playersByID]);
+  }, [myPlayerID, playersByID, setGame]);
 
   const createTicTacToe = useCallback(async () => {
     // if (topic) {
@@ -82,6 +88,7 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
           title: 'Minigame Created!',
           status: 'success',
         });
+
         video?.unPauseGame();
         closeModal();
       } catch (err) {
@@ -94,11 +101,16 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
     }
   }, [apiClient, minigameArea, closeModal, currentTownID, sessionToken, toast, video]);
 
+  const handleStartClick = () => {
+    setGame(true);
+  }
 
-
+  if(isGame) {
+    return <><ModalHeader>Current Game {minigameArea.label} has started</ModalHeader><ModalBody><Game /></ModalBody><ModalCloseButton /></> 
+  } 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader><ModalBody>{bodyMessage}</ModalBody><ModalCloseButton /><ModalFooter>
-      <Button onClick={createTicTacToe} hidden={isStartButtonHidden}>Start Game</Button>
+      <Button onClick={handleStartClick} hidden={isStartButtonHidden}>Start Game</Button>
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter></>
   );

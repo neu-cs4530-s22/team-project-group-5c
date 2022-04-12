@@ -211,6 +211,7 @@ export function conversationAreaCreateHandler(_requestData: ConversationAreaCrea
  */
 export function minigameAreaCreateHandler(_requestData: MinigameAreaCreateRequest): ResponseEnvelope<Record<string, null>> {
   const townsStore = CoveyTownsStore.getInstance();
+  console.log(_requestData.sessionToken);
   const townController = townsStore.getControllerForTown(_requestData.coveyTownID);
   if (!townController?.getSessionByToken(_requestData.sessionToken)){
     return {
@@ -218,7 +219,7 @@ export function minigameAreaCreateHandler(_requestData: MinigameAreaCreateReques
     };
   }
   const success = townController.addMinigameArea(_requestData.minigameArea, _requestData.host);
-
+  console.log(success);
   return {
     isOK: success,
     response: {},
