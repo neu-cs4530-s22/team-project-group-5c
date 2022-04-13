@@ -1,5 +1,5 @@
 import { customAlphabet, nanoid } from 'nanoid';
-import { BoundingBox, ServerConversationArea } from '../client/TownsServiceClient';
+import { BoundingBox, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 import { ChatMessage, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
 import Player from '../types/Player';
@@ -54,6 +54,10 @@ export default class CoveyTownController {
     return this._conversationAreas;
   }
 
+  get minigameAreas(): ServerMinigameArea[] {
+    return this._minigameAreas;
+  }
+
   /** The list of players currently in the town * */
   private _players: Player[] = [];
 
@@ -68,6 +72,9 @@ export default class CoveyTownController {
 
   /** The list of currently active ConversationAreas in this town */
   private _conversationAreas: ServerConversationArea[] = [];
+
+  /** The list of currently active MinigameAreas on the server in this town */
+  private _minigameAreas: ServerMinigameArea[] = [];
 
   private readonly _coveyTownID: string;
 
@@ -121,8 +128,12 @@ export default class CoveyTownController {
     this._sessions = this._sessions.filter(s => s.sessionToken !== session.sessionToken);
     this._listeners.forEach(listener => listener.onPlayerDisconnected(session.player));
     const conversation = session.player.activeConversationArea;
+    const minigame = session.player.activeMinigameArea;
     if (conversation) {
       this.removePlayerFromConversationArea(session.player, conversation);
+    }
+    if (minigame) {
+      this.removePlayerFromMinigameArea(session.player, minigame);
     }
   }
 
@@ -133,6 +144,10 @@ export default class CoveyTownController {
    * corresponding ConversationArea objects tracked by the town controller, and dispatches
    * any onConversationUpdated events as appropriate
    * 
+   * If the player has moved in or out of a minigame, the location change that is emitted is redirected here, 
+   * from the socket.on('playerMovement') in CoveyTownRequestHandlers.
+   * This method updates the corresponding minigame objects and dispatches any events to
+   * the listeners
    * @param player Player to update location for
    * @param location New location for this player
    */
@@ -153,7 +168,38 @@ export default class CoveyTownController {
       }
     }
 
+    const minigame = this.minigameAreas.find(mg => mg.label === location.minigameLabel);
+    const prevMinigame = player.activeMinigameArea;
+
+    player.activeMinigameArea = minigame;
+
+    if (minigame !== prevMinigame) {
+      if (prevMinigame) {
+        this.removePlayerFromMinigameArea(player, prevMinigame);
+      }
+      if (minigame) {
+        minigame.playersByID.push(player.id);
+        this._listeners.forEach(listener => listener.onMinigameAreaUpdated(minigame));
+      }
+    }
+
     this._listeners.forEach(listener => listener.onPlayerMoved(player));
+  }
+
+  /**
+   * If the player being removed is the host, the game and game area is destroyed. This emits the appropriate
+   * messages to the listeners. 
+   * @param player Player to remove from minigame area
+   * @param minigameArea Minigame area to remove player from 
+   */
+  removePlayerFromMinigameArea(player: Player, minigameArea: ServerMinigameArea): void {
+    if (minigameArea.playersByID[0] === player.id) {
+      this._minigameAreas.splice(this._minigameAreas.findIndex(mg => mg === minigameArea), 1);
+      this._listeners.forEach(listener => listener.onMinigameAreaDestroyed(minigameArea));
+    } else if (this._minigameAreas.some(mg => mg.label === minigameArea.label)) {
+      minigameArea.playersByID.splice(minigameArea.playersByID.findIndex(p=>p === player.id), 1);
+      this._listeners.forEach(listener => listener.onMinigameAreaUpdated(minigameArea));
+    }
   }
 
   /**
@@ -174,6 +220,7 @@ export default class CoveyTownController {
       this._listeners.forEach(listener => listener.onConversationAreaUpdated(conversation));
     }
   }
+
 
   /**
    * Creates a new conversation area in this town if there is not currently an active
@@ -206,6 +253,37 @@ export default class CoveyTownController {
     playersInThisConversation.forEach(player => {player.activeConversationArea = newArea;});
     newArea.occupantsByID = playersInThisConversation.map(player => player.id);
     this._listeners.forEach(listener => listener.onConversationAreaUpdated(newArea));
+    return true;
+  }
+
+  /**
+   * Creates a new minigame area in this town, if there is not already a game area with the same label. 
+   * 
+   * Minigame areas's bounding boxes cannot overlap.
+   * 
+   * The player that triggers creating the area will be the host, and is passed first to the playersByID list of this area.
+   * 
+   * Notifies the town listeners that a minigame area is updated
+   * 
+   * @param _minigameArea Information about the minigame area to create
+   * @param hostID The ID of the host player who triggered this minigame to be created
+   * @returns true if the minigame is created, false if not
+   */
+  addMinigameArea(_minigameArea: ServerMinigameArea, hostID: string): boolean {
+    if (this._minigameAreas.find(
+      eachExistingActiveMinigame => eachExistingActiveMinigame.label === _minigameArea.label,
+    ))
+      return false;
+    if (this._minigameAreas.find(eachExistingActiveMinigame => 
+      CoveyTownController.boxesOverlap(eachExistingActiveMinigame.boundingBox, _minigameArea.boundingBox)) !== undefined){
+      return false;
+    }
+    const newMinigame: ServerMinigameArea = Object.assign(_minigameArea);
+    this._minigameAreas.push(newMinigame);
+    const hostPlayer = this.players.filter(player=> player.id === hostID);
+    hostPlayer.forEach(player => {player.activeMinigameArea = newMinigame;});
+    newMinigame.playersByID.push(hostID);
+    this._listeners.forEach(listener => listener.onMinigameAreaUpdated(newMinigame));
     return true;
   }
 

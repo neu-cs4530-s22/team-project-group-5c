@@ -1,4 +1,4 @@
-import { ServerConversationArea } from '../client/TownsServiceClient';
+import { ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 import { ChatMessage } from '../CoveyTypes';
 import Player from './Player';
 
@@ -36,10 +36,23 @@ export default interface CoveyTownListener {
   onConversationAreaUpdated(conversationArea: ServerConversationArea) : void;
 
   /**
+   * Called when a minigame area is created and when it is updated. Look in CoveyTownRequestHandlers to see the socket.emit 
+   * message when a listener function is called. 
+   * @param minigameArea the minigame area that is updated or created
+   */
+  onMinigameAreaUpdated(minigameArea: ServerMinigameArea) : void;
+
+  /**
    * Called when a conversation area is destroyed
    * @param conversationArea the conversation area that has been destroyed
    */
   onConversationAreaDestroyed(conversationArea: ServerConversationArea): void;
+
+  /**
+   * Called when a minigame area is destroyed
+   * @param minigameArea the minigame area that has been destroyed 
+   */
+  onMinigameAreaDestroyed(minigameArea: ServerMinigameArea): void;
 
   /**
    * Called when a chat message is received from a user

@@ -15,7 +15,7 @@ import MiniGame from "./MiniGame";
  */
 
 
-class TicTacToeModel extends MiniGame {
+export default class TicTacToeModel extends MiniGame {
     private _board : string[] = ['', '', '', '', '', '', '', '', ''];
 
     private _gameName = 'Tic Tac Toe';

@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import assert from 'assert';
 import { ServerPlayer } from './Player';
 import { ServerConversationArea } from './ConversationArea';
+import { ServerMinigameArea } from './MinigameArea';
 
 /**
  * The format of a request to join a Town in Covey.Town, as dispatched by the server middleware
@@ -34,6 +35,8 @@ export interface TownJoinResponse {
   isPubliclyListed: boolean;
   /** Names and occupants of any existing ConversationAreas */
   conversationAreas: ServerConversationArea[];
+  /** Names, Labels, and players of any existing MinigameAreas */
+  minigameAreas: ServerMinigameArea[];
 }
 
 /**
@@ -83,6 +86,13 @@ export interface ConversationCreateRequest {
   coveyTownID: string;
   sessionToken: string;
   conversationArea: ServerConversationArea;
+}
+
+export interface MinigameAreaCreateRequest {
+  coveyTownID: string;
+  sessionToken: string;
+  host: string;
+  minigameArea: ServerMinigameArea;
 }
 
 /**
@@ -153,6 +163,11 @@ export default class TownsServiceClient {
   
   async createConversation(requestData: ConversationCreateRequest) : Promise<void>{
     const responseWrapper = await this._axios.post(`/towns/${requestData.coveyTownID}/conversationAreas`, requestData);
+    return TownsServiceClient.unwrapOrThrowError(responseWrapper);
+  }
+
+  async createMinigameArea(requestData: MinigameAreaCreateRequest): Promise<void>{
+    const responseWrapper = await this._axios.post(`/towns/${requestData.coveyTownID}/minigameAreas`, requestData);
     return TownsServiceClient.unwrapOrThrowError(responseWrapper);
   }
 

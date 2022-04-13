@@ -36,5 +36,6 @@ export type UserLocation = {
   y: number,
   rotation: Direction,
   moving: boolean,
-  conversationLabel?: string
+  conversationLabel?: string,
+  minigameLabel?: string,
 };
