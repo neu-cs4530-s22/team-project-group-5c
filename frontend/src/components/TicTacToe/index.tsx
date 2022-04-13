@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import gameContext from "./gameContext";
-// import gameService from "../../services/gameService";
-import socketService from "../../services/socketService";
+import socketService from "./services/socketService";
+import gameService from "./services/gameService";
 
 const GameContainer = styled.div`
   display: flex;
@@ -136,7 +136,7 @@ export function Game() {
     }
 
     return [false, false];
-  };
+   };
 
   const updateGameMatrix = (column: number, row: number, symbol: "x" | "o") => {
     const newMatrix = [...matrix];
@@ -168,7 +168,7 @@ export function Game() {
         checkGameState(newMatrix);
         setPlayerTurn(true);
       });
-  };
+   };
 
   const handleGameStart = () => {
     if (socketService.socket)
