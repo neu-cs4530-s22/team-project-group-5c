@@ -6,10 +6,16 @@ import { AddressInfo } from 'net';
 import http from 'http';
 import { nanoid } from 'nanoid';
 import { UserLocation } from '../CoveyTypes';
-import { BoundingBox, ServerConversationArea } from './TownsServiceClient';
+import { BoundingBox, ServerConversationArea, ServerMinigameArea } from './TownsServiceClient';
 
 export type RemoteServerPlayer = {
   location: UserLocation, _userName: string, _id: string
+};
+export type RemoteServerMinigameArea = {
+  label: string;
+  playersByID: string[];
+  boundingBox: BoundingBox;
+  minigame?: string;
 };
 const createdSocketClients: Socket[] = [];
 
@@ -47,6 +53,8 @@ export function createSocketClient(server: http.Server, sessionToken: string, co
   playerMoved: Promise<RemoteServerPlayer>,
   newPlayerJoined: Promise<RemoteServerPlayer>,
   playerDisconnected: Promise<RemoteServerPlayer>,
+  minigameAreaUpdated: Promise<RemoteServerMinigameArea>,
+  minigameAreaDestroyed: Promise<RemoteServerMinigameArea>,
 } {
   const address = server.address() as AddressInfo;
   const socket = io(`http://localhost:${address.port}`, {
@@ -78,6 +86,16 @@ export function createSocketClient(server: http.Server, sessionToken: string, co
       resolve(player);
     });
   });
+  const minigameAreaUpdatedPromise = new Promise<RemoteServerMinigameArea>((resolve) => {
+    socket.on('minigameAreaUpdated', (minigameArea: RemoteServerMinigameArea) => {
+      resolve(minigameArea);
+    });
+  });
+  const minigameAreaDestroyedPromise = new Promise<RemoteServerMinigameArea>((resolve) => {
+    socket.on('minigameAreaDestroyed', (minigameArea: RemoteServerMinigameArea) => {
+      resolve(minigameArea);
+    });
+  });
   createdSocketClients.push(socket);
   return {
     socket,
@@ -86,6 +104,8 @@ export function createSocketClient(server: http.Server, sessionToken: string, co
     playerMoved: playerMovedPromise,
     newPlayerJoined: newPlayerPromise,
     playerDisconnected: playerDisconnectPromise,
+    minigameAreaUpdated: minigameAreaUpdatedPromise,
+    minigameAreaDestroyed: minigameAreaDestroyedPromise,
   };
 }
 export function setSessionTokenAndTownID(coveyTownID: string, sessionToken: string, socket: ServerSocket):void {
@@ -103,5 +123,18 @@ export function createConversationForTesting(params?:{ conversationLabel?: strin
     label: params?.conversationLabel || nanoid(),
     occupantsByID: [],
     topic: params?.conversationTopic || nanoid(),
+  };
+}
+
+export function createMiniGameForTesting(params?:{ minigameLabel?: string,
+  minigame?: string,
+  boundingBox?: BoundingBox
+}) : ServerMinigameArea {
+
+  return {
+    boundingBox: params?.boundingBox || { height: 100, width: 100, x: 400, y: 400 },
+    label: params?.minigameLabel || nanoid(),
+    playersByID: [],
+    minigame: params?.minigame || nanoid(),
   };
 }

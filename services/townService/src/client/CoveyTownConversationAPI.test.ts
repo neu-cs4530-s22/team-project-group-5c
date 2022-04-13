@@ -8,8 +8,8 @@ import CoveyTownController from '../lib/CoveyTownController';
 import CoveyTownsStore from '../lib/CoveyTownsStore';
 import addTownRoutes from '../router/towns';
 import * as requestHandlers from '../requestHandlers/CoveyTownRequestHandlers';
-import { createConversationForTesting } from './TestUtils';
-import TownsServiceClient, { ServerConversationArea } from './TownsServiceClient';
+import { createConversationForTesting, createMiniGameForTesting } from './TestUtils';
+import TownsServiceClient, { ServerConversationArea, ServerMinigameArea } from './TownsServiceClient';
 
 type TestTownData = {
   friendlyName: string;
@@ -75,7 +75,7 @@ describe('conversationAreaCreateHandler', () => {
   const mockCoveyTownController = mock<CoveyTownController>();
   beforeAll(() => {
     // Set up a spy for CoveyTownsStore that will always return our mockCoveyTownsStore as the singleton instance
-    jest.spyOn(CoveyTownsStore, 'getInstance').mockReturnValue(mockCoveyTownStore);
+    jest.spyOn(CoveyTownsStore, 'getInstance').mockReturnValueOnce(mockCoveyTownStore);
   });
   beforeEach(() => {
     // Reset all mock calls, and ensure that getControllerForTown will always return the same mock controller
@@ -98,5 +98,89 @@ describe('conversationAreaCreateHandler', () => {
     });
     expect(mockCoveyTownController.getSessionByToken).toBeCalledWith(invalidSessionToken);
     expect(mockCoveyTownController.addConversationArea).not.toHaveBeenCalled();
+  });
+});
+describe('Create MiniGame Area API', () => {
+  let server: http.Server;
+  let apiClient: TownsServiceClient;
+
+  async function createTownForTesting(
+    friendlyNameToUse?: string,
+    isPublic = false,
+  ): Promise<TestTownData> {
+    const friendlyName =
+      friendlyNameToUse !== undefined
+        ? friendlyNameToUse
+        : `${isPublic ? 'Public' : 'Private'}TestingTown=${nanoid()}`;
+    const ret = await apiClient.createTown({
+      friendlyName,
+      isPubliclyListed: isPublic,
+    });
+    return {
+      friendlyName,
+      isPubliclyListed: isPublic,
+      coveyTownID: ret.coveyTownID,
+      townUpdatePassword: ret.coveyTownPassword,
+    };
+  }
+
+  beforeAll(async () => {
+    const app = Express();
+    app.use(CORS());
+    server = http.createServer(app);
+
+    addTownRoutes(server, app);
+    await server.listen();
+    const address = server.address() as AddressInfo;
+
+    apiClient = new TownsServiceClient(`http://127.0.0.1:${address.port}`);
+  });
+  afterAll(async () => {
+    await server.close();
+  });
+  it('Executes without error when creating a new minigame', async () => {
+    const testingTown = await createTownForTesting(undefined, true);
+    const testingSession = await apiClient.joinTown({
+      userName: nanoid(),
+      coveyTownID: testingTown.coveyTownID,
+    });
+    await apiClient.createMinigameArea({
+      minigameArea: createMiniGameForTesting(),
+      coveyTownID: testingTown.coveyTownID,
+      sessionToken: testingSession.coveySessionToken,
+      host: 'kim',
+    });
+  });
+});
+describe('minigameAreaCreateHandler', () => {
+
+  const mockCoveyTownStore = mock<CoveyTownsStore>();
+  const mockCoveyTownController = mock<CoveyTownController>();
+  beforeAll(() => {
+    // Set up a spy for CoveyTownsStore that will always return our mockCoveyTownsStore as the singleton instance
+    jest.spyOn(CoveyTownsStore, 'getInstance').mockReturnValueOnce(mockCoveyTownStore);
+  });
+  beforeEach(() => {
+    // Reset all mock calls, and ensure that getControllerForTown will always return the same mock controller
+    mockReset(mockCoveyTownController);
+    mockReset(mockCoveyTownStore);
+    mockCoveyTownStore.getControllerForTown.mockReturnValue(mockCoveyTownController);
+  });
+  it('Checks for a valid session token before creating a conversation area', ()=>{
+    const coveyTownID = nanoid();
+    const minigameArea :ServerMinigameArea = { boundingBox: { height: 1, width: 1, x:1, y:1 }, label: nanoid(), playersByID: [], minigame: nanoid() };
+    const invalidSessionToken = nanoid();
+
+    // Make sure to return 'undefined' regardless of what session token is passed
+    mockCoveyTownController.getSessionByToken.mockReturnValueOnce(undefined);
+
+    requestHandlers.minigameAreaCreateHandler({
+      minigameArea,
+      coveyTownID,
+      sessionToken: invalidSessionToken,
+      host: '',
+    });
+    expect(mockCoveyTownController.getSessionByToken).toBeCalledWith(invalidSessionToken);
+    expect(mockCoveyTownController.addMinigameArea).not.toHaveBeenCalled();
   });
 });

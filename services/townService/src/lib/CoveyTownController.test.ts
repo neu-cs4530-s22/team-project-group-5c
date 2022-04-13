@@ -288,5 +288,40 @@ describe('CoveyTownController', () => {
       testingTown.updatePlayerLocation(player, newLocation);
       expect(mockListener.onConversationAreaUpdated).toHaveBeenCalledTimes(1);
     });
+    it('Custom: should respect the mini game area reported by the player userLocation.minigameLabel, and not override it based on the player\'s x,y location', async ()=>{
+      const player = new Player(nanoid());
+      await testingTown.addPlayer(player);
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const result = testingTown.addMinigameArea(newMinigameArea, player.id);
+      expect(result).toBe(true);     
+      
+      const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25, minigameLabel: newMinigameArea.label };
+      testingTown.updatePlayerLocation(player, newLocation);
+      expect(player.activeMinigameArea?.label).toEqual(newMinigameArea.label);
+      expect(player.activeMinigameArea?.boundingBox).toEqual(newMinigameArea.boundingBox);
+
+      const areas = testingTown.minigameAreas;
+      expect(areas[0].playersByID.length).toBe(1);
+      expect(areas[0].playersByID[0]).toBe(player.id);
+    }); 
+    it('Custom: should emit an onMinigameAreaUpdated event when a minigame area gets a new player', async () =>{
+      const mockListener = mock<CoveyTownListener>();
+      testingTown.addTownListener(mockListener);
+
+      const player = new Player(nanoid());
+      const hostPlayer = new Player(nanoid());
+      await testingTown.addPlayer(player);
+      await testingTown.addPlayer(hostPlayer);
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const result = testingTown.addMinigameArea(newMinigameArea, hostPlayer.id);
+      expect(result).toBe(true);
+      expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(1);
+
+      const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25, minigameLabel: newMinigameArea.label };
+      testingTown.updatePlayerLocation(player, newLocation);
+      expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(2);
+    });
   });
 });
+
+// onMinigameAreaUpdated(minigameArea: ServerMinigameArea) : void;
