@@ -20,6 +20,7 @@ class SocketService {
         console.log("Connection error: ", err);
         rj(err);
       });
+      return null;
     });
   }
 }

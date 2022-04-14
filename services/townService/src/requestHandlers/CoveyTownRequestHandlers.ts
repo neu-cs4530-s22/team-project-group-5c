@@ -5,6 +5,37 @@ import { ChatMessage, CoveyTownList, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
 import CoveyTownsStore from '../lib/CoveyTownsStore';
 import { ConversationAreaCreateRequest, MinigameAreaCreateRequest, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
+import { isObject } from 'util';
+import express from 'express';
+// import io from "socket.io";
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const io = require("socket.io")(server, { cors: { origin: "*" } });
+
+
+io.on("connection", (socket: Socket) => {
+  console.log("User Connected");
+
+  socket.on("startGame", (roomCode) => {
+    console.log(`A user joined the room ${roomCode}`);
+    socket.join(roomCode);
+  });
+
+  socket.on("play", ({ id, roomCode }) => {
+    console.log(`play at ${id} to ${roomCode}`);
+    socket.broadcast.to(roomCode).emit("updateGame", id);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User Disconnected");
+  });
+});
+
+server.listen(5000, () =>
+  console.log("server running => http://localhost:5000")
+);
+
 
 /**
  * The format of a request to join a Town in Covey.Town, as dispatched by the server middleware
@@ -308,3 +339,5 @@ export function townSubscriptionHandler(socket: Socket): void {
     townController.updatePlayerLocation(s.player, movementData);
   });
 }
+
+

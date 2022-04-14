@@ -11,11 +11,19 @@ import {
   useToast
   } from '@chakra-ui/react';
   import React,{useCallback, useEffect,useState } from 'react';
+  import { io, Socket } from "socket.io-client";
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
-import { Game } from '../TicTacToe'
+// import { Game } from '../TicTacToe'
+import Main from '../TicTacToe'
+import Header from '../TicTacToe/Header/Header'
+import socketService from '../TicTacToe/services/socketService';
+import GameContext, { IGameContextProps } from "../TicTacToe/gameContext";
+// import { Socket } from 'net';
+
+
   
   
 type NewMinigameWaitingProps = {
@@ -33,10 +41,52 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
   const {apiClient, sessionToken, currentTownID} = useCoveyAppState();
   const [isGame, setGame] = useState<boolean>(false);
+  // When player pressed start
   const [isGameStarted, setGameStarted] = useState<boolean>(false);
+  const [isInRoom, setInRoom] = useState(false);
+  const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
+  const [isPlayerTurn, setPlayerTurn] = useState(false);
 
   const toast = useToast()
   const video = useMaybeVideo()
+
+
+  let socketio: Socket | null = null;
+
+  const socket2: Socket = socketService.connect("http://localhost:5000");
+
+  const connectSocket = async () => {
+    const socket = await socketService
+      .connect("http://localhost:5000")
+      .catch((err: any) => {
+        console.log("Error: ", err);
+      });
+
+      socketio = socket;
+  };
+
+  useEffect(() => {
+    connectSocket();
+
+    // If the player clicked start
+    if(isGameStarted) {
+    socketio?.emit("startGame");
+    }
+  }, [isGameStarted]);
+
+
+
+  const gameContextValue: IGameContextProps = {
+    isInRoom,
+    setInRoom,
+    playerSymbol,
+    setPlayerSymbol,
+    isPlayerTurn,
+    setPlayerTurn,
+    isGameStarted,
+    setGameStarted,
+  };
+
   // Sets the listeners of the minigame area to perform the operations whenever they are called 
   // onPlayersChange will set the players list based on what is passed in
   // onMinigameAreaDestroyed will run the closeModal() operation which will remove them from the mini game area 
@@ -106,7 +156,7 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   }
 
   if(isGame) {
-    return <><ModalHeader>Current Game {minigameArea.label} has started</ModalHeader><ModalBody><Game /></ModalBody><ModalCloseButton /></> 
+    return <><ModalHeader>Current Game {minigameArea.label} has started</ModalHeader><ModalBody><Header /><Main socket={socketio} roomCode={minigameArea.label}/></ModalBody><ModalCloseButton /></> 
   } 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader><ModalBody>{bodyMessage}</ModalBody><ModalCloseButton /><ModalFooter>
