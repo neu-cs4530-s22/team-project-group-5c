@@ -84,6 +84,8 @@ class CoveyGameScene extends Phaser.Scene {
 
   private setCreateMinigame: (createMinigame: boolean) => void;
 
+  private activeMinigame = false;
+
   private _onGameReadyListeners: Callback[] = [];
 
   constructor(
@@ -300,6 +302,10 @@ class CoveyGameScene extends Phaser.Scene {
       this.lastLocation.minigameLabel = undefined;
       this.emitMovement(this.lastLocation);
     }
+  }
+
+  setMinigameInactive() {
+    this.activeMinigame = false;
   }
 
   update() {
@@ -709,6 +715,7 @@ class CoveyGameScene extends Phaser.Scene {
                   this.emitMovement(localLastLocation);
                 }
                 this.setNewMinigame(updatedMinigameArea);
+                this.activeMinigame = false;
                 this.setCreateMinigame(false);
               }
             }
@@ -718,7 +725,7 @@ class CoveyGameScene extends Phaser.Scene {
         } else {
           // There is not an existing minigameArea. Create one if the spacebar button is pressed.
           // The default for no minigameArea will show the joinMinigameTextBox
-          if (cursorKeys.space.isDown) {
+          if (cursorKeys.space.isDown && !this.activeMinigame) {
             const newMinigameArea = new MinigameArea(
               BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
               minigameLabel,
@@ -730,6 +737,7 @@ class CoveyGameScene extends Phaser.Scene {
               "tic tac toe"
             );
             this.setNewMinigame(newMinigameArea);
+            this.activeMinigame = true;
             // Only the host can create a minigame
             this.setCreateMinigame(true);
           }
@@ -872,7 +880,6 @@ export default function WorldMap(): JSX.Element {
   const [newMinigame, setNewMinigame] = useState<MinigameArea>();
   const playerMovementCallbacks = usePlayerMovement();
   const players = usePlayersInTown();
-  // const [newGameHost, setNewGameHost] = useState<boolean>(false);
   const [createMinigame, setCreateMinigame] = useState<boolean>(false);
   const [shouldEmitMinigameLocationMovement, setShouldEmitMinigameLocationMovement] = useState<boolean>(false);
   const toast = useToast();
@@ -997,18 +1004,26 @@ export default function WorldMap(): JSX.Element {
   }, [newMinigame, apiClient, currentTownID, sessionToken, myPlayerID, toast]);
 
   // Creates a minigame only when createMinigame is set to true. This happens when the host presses space to create the game. 
-  // TODO: this can be removed from the useEffect and put elsewhere.
   useEffect(() => {
-    if (newMinigame && createMinigame) {
-      createMinigameArea();
-      setCreateMinigame(false);
+
+    async function asyncCreateMinigame() {
+      await createMinigameArea();
     }
-  }, [createMinigame, createMinigameArea, newMinigame]);
+
+    if (newMinigame && createMinigame) {
+      const alreadyCreatedMinigame = minigameAreas.find(mg => mg.label === newMinigame.label);
+      if (!alreadyCreatedMinigame) {
+        asyncCreateMinigame();
+        setCreateMinigame(false);
+      }
+    }
+  }, [createMinigame, createMinigameArea, minigameAreas, newMinigame]);
 
   // This is used to remove a player from a minigame only when the boolean flag is set to true 
   useEffect(() => {
     if (shouldEmitMinigameLocationMovement) {
       gameScene?.updatePlayerMinigameLocation();
+      gameScene?.setMinigameInactive();
       setShouldEmitMinigameLocationMovement(false);
     }
   }, [shouldEmitMinigameLocationMovement, gameScene]);
@@ -1018,11 +1033,6 @@ export default function WorldMap(): JSX.Element {
     video?.pauseGame();
 
     if (newMinigame) {
-      // if (newGameHost) {
-      //   if (!isNewMinigameCreated) {
-      //     createMinigameArea();
-      //   }
-      // }
       const closeMinigameModal = () => {
           video?.unPauseGame();
           setNewMinigame(undefined);
