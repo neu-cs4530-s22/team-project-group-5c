@@ -1006,6 +1006,9 @@ export default function WorldMap(): JSX.Element {
       }
   }, [newMinigame, apiClient, currentTownID, sessionToken, myPlayerID, toast]);
 
+  /**
+   * A player joins a game room
+   */
   const joinGameRoom = useCallback(async () => {
     if (newMinigame && socket) {
       setJoiningGameRoom(true);
@@ -1030,6 +1033,7 @@ export default function WorldMap(): JSX.Element {
     }
   }, [createMinigame, createMinigameArea, minigameAreas, newMinigame]);
 
+  // When space bar is hit to go into a new minigame, the player joins the minigame socket room
   useEffect(() => {
     async function asyncJoinGameRoom() {
       await joinGameRoom();

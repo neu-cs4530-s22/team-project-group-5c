@@ -67,6 +67,9 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     }
   }, [myPlayerID, playersByID]);
 
+  /**
+   * Host can start the game, which will trigger the socket client to emit the start_game message
+   */
   const startGame = async () => {
     if (socket) {
       const gameStarted = await MinigameService.startMinigame(socket, minigameArea.label);
@@ -75,9 +78,6 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
       }
     }
   }
-
-
-
 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader>
@@ -113,6 +113,9 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     const [isGameStarted, setGameStarted] = useState<boolean>(false);
     const {socket} = useCoveyAppState();
 
+    /**
+     * When component gets rendered, this allows the guest to set up a listener waiting for the game to be started
+     */
     const handleGameStart = useCallback(() => {
       if (socket && newMinigame) {
         MinigameService.onStartgame(socket, newMinigame.label, () => {

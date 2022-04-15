@@ -1,6 +1,5 @@
-import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay } from '@chakra-ui/react';
+import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
 import React from 'react';
-import useMaybeVideo from '../../hooks/useMaybeVideo';
 
 type TicTacToeGameModalProps = {
   closeModal: ()=>void;

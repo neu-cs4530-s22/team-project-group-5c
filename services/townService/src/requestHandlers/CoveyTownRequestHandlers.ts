@@ -308,6 +308,7 @@ export function townSubscriptionHandler(socket: Socket): void {
     townController.updatePlayerLocation(s.player, movementData);
   });
 
+  // Register minigame listeners on the socket
   minigameSubscriptionHandler(socket);
 
 }
