@@ -15,6 +15,7 @@ import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
 import NewMinigameModal from './NewMinigameModal';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
+import MinigameService from '../../classes/MinigameService';
 
 // Original inspiration and code from:
 // https://medium.com/@michaelwesthadley/modular-game-worlds-in-phaser-3-tilemaps-1-958fc7e6bbd6
@@ -872,7 +873,7 @@ class CoveyGameScene extends Phaser.Scene {
 export default function WorldMap(): JSX.Element {
   const {apiClient, sessionToken, currentTownID} = useCoveyAppState();
   const video = Video.instance();
-  const { emitMovement, myPlayerID } = useCoveyAppState();
+  const { socket, emitMovement, myPlayerID } = useCoveyAppState();
   const conversationAreas = useConversationAreas();
   const minigameAreas = useMinigameAreas();
   const [gameScene, setGameScene] = useState<CoveyGameScene>();
@@ -883,6 +884,8 @@ export default function WorldMap(): JSX.Element {
   const [createMinigame, setCreateMinigame] = useState<boolean>(false);
   const [shouldEmitMinigameLocationMovement, setShouldEmitMinigameLocationMovement] = useState<boolean>(false);
   const toast = useToast();
+
+  const [isJoiningGameRoom, setJoiningGameRoom] = useState<boolean>(false);
 
   useEffect(() => {
     const config = {
@@ -1003,6 +1006,14 @@ export default function WorldMap(): JSX.Element {
       }
   }, [newMinigame, apiClient, currentTownID, sessionToken, myPlayerID, toast]);
 
+  const joinGameRoom = useCallback(async () => {
+    if (newMinigame && socket) {
+      setJoiningGameRoom(true);
+      await MinigameService.joinMinigameRoom(socket, newMinigame.label)
+      setJoiningGameRoom(false);
+    }
+  }, [newMinigame, socket]);
+
   // Creates a minigame only when createMinigame is set to true. This happens when the host presses space to create the game. 
   useEffect(() => {
 
@@ -1018,6 +1029,16 @@ export default function WorldMap(): JSX.Element {
       }
     }
   }, [createMinigame, createMinigameArea, minigameAreas, newMinigame]);
+
+  useEffect(() => {
+    async function asyncJoinGameRoom() {
+      await joinGameRoom();
+    }
+
+    if (newMinigame) {
+      asyncJoinGameRoom();
+    }
+  }, [joinGameRoom, newMinigame]);
 
   // This is used to remove a player from a minigame only when the boolean flag is set to true 
   useEffect(() => {
@@ -1045,11 +1066,12 @@ export default function WorldMap(): JSX.Element {
           myPlayerID={myPlayerID}
           closeModal={closeMinigameModal}
           newMinigameLabel={newMinigame.label}
+          isJoiningGameRoom={isJoiningGameRoom}
         />
       );
     }
     return <></>;
-  }, [video, newMinigame, myPlayerID]);
+  }, [video, newMinigame, myPlayerID, isJoiningGameRoom]);
 
   return (
     <div id='app-container'>
