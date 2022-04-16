@@ -1,6 +1,8 @@
 import express, { Express } from 'express';
 import io from 'socket.io';
-import { Server } from 'http';
+import "reflect-metadata";
+import { Server, ServerResponse } from 'http';
+import * as http from "http";
 import { StatusCodes } from 'http-status-codes';
 import {
   conversationAreaCreateHandler,
@@ -12,6 +14,7 @@ import {
   townUpdateHandler,
 } from '../requestHandlers/CoveyTownRequestHandlers';
 import { logError } from '../Utils';
+import socketServer from './socket';
 
 export default function addTownRoutes(http: Server, app: Express): io.Server {
   /*
@@ -149,7 +152,12 @@ export default function addTownRoutes(http: Server, app: Express): io.Server {
     }
   });
 
-  const socketServer = new io.Server(http, { cors: { origin: '*' } });
-  socketServer.on('connection', townSubscriptionHandler);
-  return socketServer;
+  // const io = socketServer(http);
+
+
+
+  const socketServers = new io.Server(http, { cors: { origin: '*' } });
+  socketServers.on('connection', townSubscriptionHandler);
+  return socketServers;
 }
+

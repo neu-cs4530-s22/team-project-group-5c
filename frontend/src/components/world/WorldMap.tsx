@@ -1079,6 +1079,7 @@ import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
 import NewMinigameModal from './NewMinigameModal';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
+import App from "../world/App";
 
 // Original inspiration and code from:
 // https://medium.com/@michaelwesthadley/modular-game-worlds-in-phaser-3-tilemaps-1-958fc7e6bbd6
@@ -2094,13 +2095,17 @@ export default function WorldMap(): JSX.Element {
       }
 
       return (
-        <NewMinigameModal
-          isOpen={newMinigame !== undefined}
-          myPlayerID={myPlayerID}
-          closeModal={closeMinigameModal}
-          newMinigameLabel={newMinigame.label}
-        />
-      );
+        <App />
+      )
+
+      // return (
+      //   <NewMinigameModal
+      //     isOpen={newMinigame !== undefined}
+      //     myPlayerID={myPlayerID}
+      //     closeModal={closeMinigameModal}
+      //     newMinigameLabel={newMinigame.label}
+      //   />
+      // );
     }
     return <></>;
   }, [video, newMinigame, myPlayerID]);

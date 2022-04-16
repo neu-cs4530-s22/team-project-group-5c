@@ -16,8 +16,8 @@ import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
-// import { Game } from '../TicTacToe'
-import Main from '../TicTacToe'
+ import { Game } from '../TicTacToe'
+// import Main from '../TicTacToe'
 import Header from '../TicTacToe/Header/Header'
 import socketService from '../TicTacToe/services/socketService';
 import GameContext, { IGameContextProps } from "../TicTacToe/gameContext";
@@ -154,9 +154,10 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   const handleStartClick = () => {
     setGame(true);
   }
+  // <Main socket={socketio} roomCode={minigameArea.label}/>
 
   if(isGame) {
-    return <><ModalHeader>Current Game {minigameArea.label} has started</ModalHeader><ModalBody><Header /><Main socket={socketio} roomCode={minigameArea.label}/></ModalBody><ModalCloseButton /></> 
+    return <><ModalHeader>Current Game {minigameArea.label} has started</ModalHeader><ModalBody><Header /><Game /></ModalBody><ModalCloseButton /></> 
   } 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader><ModalBody>{bodyMessage}</ModalBody><ModalCloseButton /><ModalFooter>
@@ -166,6 +167,8 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
   );
 
 }
+
+
 
 
   type NewMinigameModalProps = {
@@ -199,3 +202,4 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
       return <></>
   }
   
+
