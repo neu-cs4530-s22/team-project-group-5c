@@ -201,4 +201,8 @@ export default class TownsServiceClient {
     return TownsServiceClient.unwrapOrThrowError(responseWrapper);
   }
 
+  async deleteMinigameArea(requestData: MinigameAreaCreateRequest): Promise<void>{
+    const responseWrapper = await this._axios.post(`/towns/${requestData.coveyTownID}/minigameAreas`, requestData);
+    return TownsServiceClient.unwrapOrThrowError(responseWrapper);
+  }
 }

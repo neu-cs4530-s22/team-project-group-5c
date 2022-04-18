@@ -108,7 +108,9 @@ export default function addTownRoutes(http: Server, app: Express): io.Server {
         });
     }
   });
-
+  /**
+   * Create a conversation area
+   */
   app.post('/towns/:townID/conversationAreas', express.json(), async (req, res) => {
     try {
       const result = conversationAreaCreateHandler({
