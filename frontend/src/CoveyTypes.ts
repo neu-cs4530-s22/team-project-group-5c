@@ -23,3 +23,14 @@ export type CoveyAppState = {
   socket: Socket | null,
   apiClient: TownsServiceClient
 };
+
+export type TicTacToeGameState = {
+  isInRoom: boolean;
+  setInRoom: (inRoom: boolean) => void;
+  playerSymbol: "x" | "o";
+  setPlayerSymbol: (symbol: "x" | "o") => void;
+  isPlayerTurn: boolean;
+  setPlayerTurn: (turn: boolean) => void;
+  isGameStarted: boolean;
+  setGameStarted: (started: boolean) => void;
+};
