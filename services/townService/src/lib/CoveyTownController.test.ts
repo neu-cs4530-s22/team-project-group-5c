@@ -10,6 +10,7 @@ import PlayerSession from '../types/PlayerSession';
 import { townSubscriptionHandler } from '../requestHandlers/CoveyTownRequestHandlers';
 import CoveyTownsStore from './CoveyTownsStore';
 import * as TestUtils from '../client/TestUtils';
+import minigameSubscriptionHandler from '../requestHandlers/MinigameRequestHandlers';
 
 const mockTwilioVideo = mockDeep<TwilioVideo>();
 jest.spyOn(TwilioVideo, 'getInstance').mockReturnValue(mockTwilioVideo);
@@ -180,6 +181,36 @@ describe('CoveyTownController', () => {
         expect(mockSocket.emit).toBeCalledWith('townClosing');
         expect(mockSocket.disconnect).toBeCalledWith(true);
       });
+      it('MinigameRequestHandlers join game room', async () => {
+        TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
+        minigameSubscriptionHandler(mockSocket);
+        const joinGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'join_game_room');
+
+        if (joinGameHandler && joinGameHandler[1]) {
+          const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+          await joinGameHandler[1](newMinigameArea.label);                    
+        } else {
+          fail('No joinGameHandler registered');
+        }
+      });
+      it('MinigameRequestHandlers start game', async () => {
+        TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
+        minigameSubscriptionHandler(mockSocket);
+        const joinGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'join_game_room');
+        const startGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'start_game');
+
+        if (joinGameHandler && joinGameHandler[1] && startGameHandler && startGameHandler[1]) {
+          const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+          await joinGameHandler[1](newMinigameArea.label); 
+          try {
+            await startGameHandler[1](newMinigameArea.label);
+          } catch (error) {
+            expect(startGameHandler[1]).not.toBe(undefined);
+          }
+        } else {
+          fail('No startGameHandler registered');
+        }                 
+      });
       describe('when a socket disconnect event is fired', () => {
         it('should remove the town listener for that socket, and stop sending events to it', async () => {
           TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
@@ -271,7 +302,6 @@ describe('CoveyTownController', () => {
       const areas = testingTown.conversationAreas;
       expect(areas[0].occupantsByID.length).toBe(1);
       expect(areas[0].occupantsByID[0]).toBe(player.id);
-
     }); 
     it('should emit an onConversationUpdated event when a conversation area gets a new occupant', async () =>{
 
@@ -303,6 +333,21 @@ describe('CoveyTownController', () => {
       const areas = testingTown.minigameAreas;
       expect(areas[0].playersByID.length).toBe(1);
       expect(areas[0].playersByID[0]).toBe(player.id);
+    });
+    it('Custom: update the player location from the minigame to non minigame area', async ()=>{
+      const player = new Player(nanoid());
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      player.activeMinigameArea = newMinigameArea;
+      await testingTown.addPlayer(player);
+      const result = testingTown.addMinigameArea(newMinigameArea, player.id);
+      expect(result).toBe(true);     
+      
+      const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25 };
+      testingTown.updatePlayerLocation(player, newLocation);
+      expect(player.activeMinigameArea).toEqual(undefined);
+
+      const areas = testingTown.minigameAreas;
+      expect(areas[0]).toBe(undefined);
     }); 
     it('Custom: should emit an onMinigameAreaUpdated event when a minigame area gets a new player', async () =>{
       const mockListener = mock<CoveyTownListener>();
@@ -320,6 +365,80 @@ describe('CoveyTownController', () => {
       const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25, minigameLabel: newMinigameArea.label };
       testingTown.updatePlayerLocation(player, newLocation);
       expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(2);
+    });
+    it('Custom: should emit an onMinigameAreaDestroyed event when a minigame area has no player', async ()=>{
+      const mockListener = mock<CoveyTownListener>();
+      testingTown.addTownListener(mockListener);
+
+      const player = new Player(nanoid());
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      player.activeMinigameArea = newMinigameArea;
+      await testingTown.addPlayer(player);
+      const result = testingTown.addMinigameArea(newMinigameArea, player.id);
+      expect(result).toBe(true);     
+      
+      const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25 };
+      testingTown.updatePlayerLocation(player, newLocation);
+      expect(player.activeMinigameArea).toEqual(undefined);
+
+      const areas = testingTown.minigameAreas;
+      expect(areas[0]).toBe(undefined);
+      expect(mockListener.onMinigameAreaDestroyed).toHaveBeenCalledTimes(1);
+    }); 
+    it('Custom: should emit an onMinigameAreaUpdated event when a player left a minigame area and one still exist', async ()=>{
+      const mockListener = mock<CoveyTownListener>();
+      testingTown.addTownListener(mockListener);
+
+      const areas = testingTown.minigameAreas;
+      const player = new Player(nanoid());
+      const joinPlayer = new Player(nanoid());
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const minigameLocation:UserLocation = { moving: false, rotation: 'front', x: 50, y: 50, minigameLabel: newMinigameArea.label };
+      player.activeMinigameArea = newMinigameArea;
+      await testingTown.addPlayer(player);
+      await testingTown.addPlayer(joinPlayer);
+      const result1 = testingTown.addMinigameArea(newMinigameArea, player.id);
+      expect(result1).toBe(true);
+      expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(1);
+      testingTown.updatePlayerLocation(joinPlayer, minigameLocation);    
+      expect(areas[0]).toBe(newMinigameArea);
+      expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(2);
+      
+      const newLocation:UserLocation = { moving: false, rotation: 'front', x: 25, y: 25 };
+      testingTown.updatePlayerLocation(joinPlayer, newLocation);
+      expect(joinPlayer.activeMinigameArea).toEqual(undefined);
+      expect(player.activeMinigameArea).toEqual(newMinigameArea);
+
+      expect(areas[0]).toBe(newMinigameArea);
+      expect(mockListener.onMinigameAreaDestroyed).toHaveBeenCalledTimes(0);
+      expect(mockListener.onMinigameAreaUpdated).toHaveBeenCalledTimes(3);
+    }); 
+  });
+  describe('addMinigameArea', () => {
+    let testingTown: CoveyTownController;
+    beforeEach(() => {
+      const townName = `addConversationArea test town ${nanoid()}`;
+      testingTown = new CoveyTownController(townName, false);
+    });
+    it('should return false if there is a minigame that has same label as the given mini game', ()=>{
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const player1 = new Player(nanoid());
+      const result = testingTown.addMinigameArea(newMinigameArea, player1.id);
+      expect(result).toBe(true);
+      const newMinigameArea2 = TestUtils.createMiniGameForTesting({ boundingBox: { x: 80, y: 80, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const player2 = new Player(nanoid());
+      const result2 = testingTown.addMinigameArea(newMinigameArea2, player2.id);
+      expect(result2).toBe(false);
+    });
+    it('should return false if there is a minigame bounding box overlapped', ()=>{
+      const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+      const player1 = new Player(nanoid());
+      const result = testingTown.addMinigameArea(newMinigameArea, player1.id);
+      expect(result).toBe(true);
+      const newMinigameArea2 = TestUtils.createMiniGameForTesting({ boundingBox: { x: 52, y: 52, height: 5, width: 5 }, minigameLabel: 'tictactoe2' });
+      const player2 = new Player(nanoid());
+      const result2 = testingTown.addMinigameArea(newMinigameArea2, player2.id);
+      expect(result2).toBe(false);
     });
   });
 });

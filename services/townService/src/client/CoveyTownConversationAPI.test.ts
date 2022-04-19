@@ -166,7 +166,7 @@ describe('minigameAreaCreateHandler', () => {
     mockReset(mockCoveyTownStore);
     mockCoveyTownStore.getControllerForTown.mockReturnValue(mockCoveyTownController);
   });
-  it('Checks for a valid session token before creating a conversation area', ()=>{
+  it('Checks for a valid session token before creating a minigame area', ()=>{
     const coveyTownID = nanoid();
     const minigameArea :ServerMinigameArea = { boundingBox: { height: 1, width: 1, x:1, y:1 }, label: nanoid(), playersByID: [], minigame: nanoid() };
     const invalidSessionToken = nanoid();

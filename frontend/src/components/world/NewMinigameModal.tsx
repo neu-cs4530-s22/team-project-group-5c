@@ -89,7 +89,6 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter></>
   );
-
 }
 
 

@@ -141,16 +141,4 @@ describe('TownServiceApiSocket', () => {
     await apiClient.createMinigameArea({ coveyTownID: town.coveyTownID, host: joinData.coveyUserID, sessionToken: joinData.coveySessionToken, minigameArea: newMinigame });
     expect((await minigameAreaUpdated).label).toBe(newMinigame.label);  
   });
-  // TODO: Can't find proper functions in TownsServiceClient: Should ask this
-  // it('Custom: Informs all minigameAreas when the minigameArea is destroyed', async () => {
-  //   const town = await createTownForTesting();
-  //   const joinData = await apiClient.joinTown({ coveyTownID: town.coveyTownID, userName: nanoid() });
-  //   const newMinigame = TestUtils.createMiniGameForTesting();
-  
-  //   const { socketConnected, minigameAreaUpdated } = TestUtils.createSocketClient(server, joinData.coveySessionToken, town.coveyTownID);
-  //   await Promise.all([socketConnected]);
-
-  //   await apiClient.createMinigameArea({ coveyTownID: town.coveyTownID, host: joinData.coveyUserID, sessionToken: joinData.coveySessionToken, minigameArea: newMinigame });
-  //   expect((await minigameAreaUpdated).label).toBe(newMinigame.label);  
-  // });
 });
