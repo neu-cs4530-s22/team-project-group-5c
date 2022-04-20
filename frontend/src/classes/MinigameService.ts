@@ -1,5 +1,7 @@
+import { LabelImportant } from "@material-ui/icons";
+import { AnyARecord } from "dns";
 import { Socket } from "socket.io-client";
-
+import { IPlayMatrix, IStartGame } from "../components/TicTacToe";
 /**
  * Minigame service client that performs all of the socket connections. These functions are all static functions
  * that perform socket call initializations. 
@@ -40,8 +42,53 @@ export default class MinigameService {
    * @param minigameLabel unique minigame label
    * @param startGameListener listener callback
    */
-  public static onStartgame(socket: Socket, minigameLabel: string, startGameListener: () => void): void {
+  public static onStartgame(socket: Socket, minigameLabel: string, startGameListener: (options: IStartGame) => void): void {
     socket.on(`${minigameLabel}_game_started`, startGameListener);
+  }
+
+  // public static async onStartGame(
+  //   socket: Socket,
+  //   listiner: (options: IStartGame) => void
+  // ) {
+  //   socket.on("start_game", listiner);
+  // }
+
+  public static async joinGameRoom(socket: Socket, roomId: string): Promise<boolean> {
+    return new Promise((rs, rj) => {
+      socket.emit("join_game", { roomId });
+      socket.on("room_joined", () => rs(true));
+      socket.on("room_join_error", (error: any) => rj(error));
+    });
+  }
+
+  public static async updateGame(socket: Socket, gameMatrix: IPlayMatrix, roomId: string) {
+    console.log("updateGameSockett matrix is:  ", gameMatrix);
+    console.log("roomid in minigame service  update game is: ", roomId)
+    socket.emit("update_game", gameMatrix, roomId);
+  }
+
+  public static async onGameUpdate(
+    socket: Socket | null,
+    listiner: (matrix: IPlayMatrix) => void
+  ) {
+    console.log("ON GAME UPDATTE IN SERVICE ::::::::::::::::");
+    socket?.on("on_game_update", (matrix: any) => listiner(matrix));
+    
+  }
+
+  public static async onStartGame(
+    socket: Socket,
+    listiner: (options: IStartGame) => void
+  ) {
+    socket.on("start_game", listiner);
+  }
+
+  public static async gameWin(socket: Socket, message: string) {
+    socket.emit("game_win", { message });
+  }
+
+  public static async onGameWin(socket: Socket, listiner: (message: string) => void) {
+    socket.on("on_game_win", ( message: any) => listiner(message));
   }
 }
 

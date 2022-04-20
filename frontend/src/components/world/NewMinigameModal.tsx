@@ -8,22 +8,25 @@ import {
   ModalHeader,
   ModalOverlay,
   } from '@chakra-ui/react';
-import React,{useCallback, useEffect,useState } from 'react';
+import React,{useCallback, useContext, useEffect,useState } from 'react';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import MinigameService from '../../classes/MinigameService';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import TicTacToeGameModal from '../TicTacToeGame/TicTacToeGameModal';
+import { Game } from '../TicTacToe';
+import gameContext, { IGameContextProps } from '../TicTacToe/gameContext';
   
   
 type NewMinigameWaitingProps = {
   minigameArea: MinigameArea;
   myPlayerID: string;
   closeModal: ()=>void;
-  setGameStarted: (arg0: boolean) => void;
+   setGameStarted: (arg0: boolean) => void;
   isJoiningGameRoom: boolean;
 }
+
 
 /** 
  * Minigame modal component that opens when a new user starts playing a minigame. 
@@ -33,6 +36,23 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
   const {socket} = useCoveyAppState();
+  const [isInRoom, setInRoom] = useState(false);
+  const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
+  const [isPlayerTurn, setPlayerTurn] = useState(false);
+  // const [isGameStarted, setGameStarted] = useState(false);
+
+  // const gameContextValue: IGameContextProps = {
+  //   isInRoom,
+  //   setInRoom,
+  //   playerSymbol,
+  //   setPlayerSymbol,
+  //   isPlayerTurn,
+  //   setPlayerTurn,
+  //   setGameStarted,
+  //   isGameStarted
+  // };
+
+
 
   // Sets the listeners of the minigame area to perform the operations whenever they are called 
   // onPlayersChange will set the players list based on what is passed in
@@ -75,9 +95,11 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
       const gameStarted = await MinigameService.startMinigame(socket, minigameArea.label);
       if (gameStarted) {
         setGameStarted(true);
+
       }
     }
   }
+  
 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader>
@@ -110,16 +132,29 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     const minigameAreas = useMinigameAreas();
     const newMinigame = minigameAreas.find(mg => mg.label === newMinigameLabel);
 
-    const [isGameStarted, setGameStarted] = useState<boolean>(false);
+     const [isGameStarted, setGameStarted] = useState<boolean>(false);
     const {socket} = useCoveyAppState();
+
+    const {
+      playerSymbol,
+      setPlayerSymbol,
+      setPlayerTurn,
+      isPlayerTurn,
+      // setGameStarted,
+     //  isGameStarted,
+    } = useContext(gameContext);
 
     /**
      * When component gets rendered, this allows the guest to set up a listener waiting for the game to be started
      */
     const handleGameStart = useCallback(() => {
       if (socket && newMinigame) {
-        MinigameService.onStartgame(socket, newMinigame.label, () => {
+        MinigameService.onStartgame(socket, newMinigame.label, (options) => {
+          console.log("OPTIONS SYMBOL IN MODAL ON START CALLBACK", options.symbol);
           setGameStarted(true);
+          setPlayerSymbol(options.symbol);
+          if (options.start) setPlayerTurn(true);
+          else setPlayerTurn(false);
         })
       }
     }, [newMinigame, socket]);
@@ -137,7 +172,8 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
           <ModalOverlay />
           <ModalContent>
             {!isGameStarted && <NewMinigameWaiting minigameArea={newMinigame} myPlayerID={myPlayerID} closeModal={closeModal} setGameStarted={setGameStarted} isJoiningGameRoom={isJoiningGameRoom}/>}
-            {isGameStarted && <TicTacToeGameModal closeModal={closeModal}/>}
+            {/* {isGameStarted && <TicTacToeGameModal closeModal={closeModal}/>} */}
+            {isGameStarted && <Game roomLabel={newMinigame.label} />}
           </ModalContent>
         </Modal>
       );
