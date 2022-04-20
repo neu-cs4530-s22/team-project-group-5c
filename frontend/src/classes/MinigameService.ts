@@ -43,15 +43,10 @@ export default class MinigameService {
    * @param startGameListener listener callback
    */
   public static onStartgame(socket: Socket, minigameLabel: string, startGameListener: (options: IStartGame) => void): void {
+    // console.log("onStartgame in minigameService options: ", startGameListener)
     socket.on(`${minigameLabel}_game_started`, startGameListener);
   }
 
-  // public static async onStartGame(
-  //   socket: Socket,
-  //   listiner: (options: IStartGame) => void
-  // ) {
-  //   socket.on("start_game", listiner);
-  // }
 
   public static async joinGameRoom(socket: Socket, roomId: string): Promise<boolean> {
     return new Promise((rs, rj) => {
@@ -59,6 +54,24 @@ export default class MinigameService {
       socket.on("room_joined", () => rs(true));
       socket.on("room_join_error", (error: any) => rj(error));
     });
+  }
+
+  public async updateGame(socket: Socket, gameMatrix: IPlayMatrix) {
+    socket.emit("update_game", { matrix: gameMatrix });
+  }
+
+  public async onGameUpdate(
+    socket: Socket,
+    listiner: (matrix: IPlayMatrix) => void
+  ) {
+    socket.on("on_game_update", ( matrix: any) => listiner(matrix));
+  }
+
+  public async onStartGame(
+    socket: Socket,
+    listiner: (options: IStartGame) => void
+  ) {
+    socket.on("start_game", listiner);
   }
 
   public static async updateGame(socket: Socket, gameMatrix: IPlayMatrix, roomId: string) {
@@ -77,9 +90,11 @@ export default class MinigameService {
   }
 
   public static async onStartGame(
+    
     socket: Socket,
     listiner: (options: IStartGame) => void
   ) {
+    console.log("onStartGame is being called");
     socket.on("start_game", listiner);
   }
 

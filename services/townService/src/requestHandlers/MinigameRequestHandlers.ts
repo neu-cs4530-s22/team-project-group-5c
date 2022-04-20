@@ -25,6 +25,11 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.to(minigameLabel).emit(`${minigameLabel}_game_started`, {start: false, symbol: "o"});
   });
 
+  socket.on('join_game', async (minigameLabel: string) => {
+    socket.emit('start_game', {start: true, symbol: "x"});
+    socket.to(minigameLabel).emit("start_game", {start: false, symbol: "o"});
+  });
+
   socket.on('update_game', async (gameMatrix: any, roomId: any) => {
     console.log("update game in request handler line 28 with label of", roomId.roomLabel, "message: ", gameMatrix);
     socket.emit('on_game_update', gameMatrix);

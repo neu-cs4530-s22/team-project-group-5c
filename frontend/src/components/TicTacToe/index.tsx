@@ -4,6 +4,7 @@ import gameContext from "./gameContext";
 import MinigameService from "../../classes/MinigameService";
 import useCoveyAppState from "../../hooks/useCoveyAppState";
 import { nanoid } from "nanoid";
+import MinigameArea from "../../classes/MinigameArea";
 
 // import socketService from "./services/socketService";
 // import MinigameService from "./services/MinigameService";
@@ -133,6 +134,7 @@ export function Game(roomLabel: any) {
         row.push(matrix[i][j]);
       }
 
+      console.log("CheckGameState Player Symbol: ", playerSymbol);
       if (row.every((value) => value && value === playerSymbol)) {
         return [true, false];
       } else if (row.every((value) => value && value !== playerSymbol)) {
@@ -174,8 +176,7 @@ export function Game(roomLabel: any) {
    };
 
   const updateGameMatrix = (column: number, row: number, symbol: "x" | "o") => {
-    console.log("UPDATE GAME");
-    console.log(symbol, "SYMBOLLLL");
+    console.log(symbol, " is SYMBOL in updateGameMatrix");
     const newMatrix = [...matrix];
 
 
@@ -189,6 +190,7 @@ export function Game(roomLabel: any) {
     if (socket) {
       console.log("new matrix in update game matrix is:::", newMatrix)
       MinigameService.updateGame(socket, newMatrix, roomLabel);
+      setPlayerTurn(false);
       const [currentPlayerWon, otherPlayerWon] = checkGameState(newMatrix);
       if (currentPlayerWon && otherPlayerWon) {
         MinigameService.gameWin(socket, "The Game is a TIE!");
@@ -198,16 +200,14 @@ export function Game(roomLabel: any) {
         alert("You Won!");
       }
 
-      setPlayerTurn(false);
+      
     }
   };
 
   const handleGameUpdate = () => {
-    console.log("handle game update ::::::::::::::::");
     if (socket)
     console.log("socket is valid (in handle game update line 179")
       MinigameService.onGameUpdate(socket, (newMatrix) => {
-        console.log("matris is being set, handlegameupdate line 182")
         setMatrix(newMatrix);
         console.log("matrix is:::", newMatrix)
         checkGameState(newMatrix);
@@ -218,16 +218,22 @@ export function Game(roomLabel: any) {
   const handleGameStart = () => {
 
     console.log("handle game starrt ::::::::::::::::");
+    console.log(playerSymbol, "player symbol before on start game");
     if (socket)
 
+    
    // MinigameService.onStartgame(socke)
-      MinigameService.onStartGame(socket, (options) => {
-        console.log("options SYMBOL", options.symbol);
+      MinigameService.onStartGame(socket, (options: any) => {
+        // console.log("options SYMBOL", options);
         setGameStarted(true);
         setPlayerSymbol(options.symbol);
+        console.log(options.symbol, "THIS IS O{ptions}>SYMBOL}");
+        // console.log("handleGameStart Options.Start is currently ", options.start);
         if (options.start) setPlayerTurn(true);
         else setPlayerTurn(false);
       });
+
+      console.log(playerSymbol, "player symbol AFTER on start game");
   };
 
   const handleGameWin = () => {
