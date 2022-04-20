@@ -8,25 +8,33 @@ import {
   ModalHeader,
   ModalOverlay,
   } from '@chakra-ui/react';
-  import React,{useEffect,useState } from 'react';
+import React,{useCallback, useEffect,useState } from 'react';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
+import MinigameService from '../../classes/MinigameService';
+import useCoveyAppState from '../../hooks/useCoveyAppState';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
+import usePlayersInTown from '../../hooks/usePlayersInTown';
+import TicTacToeGameModal from '../TicTacToeGame/TicTacToeGameModal';
   
   
 type NewMinigameWaitingProps = {
   minigameArea: MinigameArea;
   myPlayerID: string;
   closeModal: ()=>void;
+  setGameStarted: (arg0: boolean) => void;
+  isJoiningGameRoom: boolean;
 }
 
 /** 
  * Minigame modal component that opens when a new user starts playing a minigame. 
  */
-function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigameWaitingProps) : JSX.Element {
+function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarted, isJoiningGameRoom} : NewMinigameWaitingProps) : JSX.Element {
   const [playersByID, setPlayersByID] = useState<string[]>(minigameArea.playersByID);
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
+  const {socket} = useCoveyAppState();
+  const players = usePlayersInTown();
 
   // Sets the listeners of the minigame area to perform the operations whenever they are called 
   // onPlayersChange will set the players list based on what is passed in
@@ -53,20 +61,35 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
     }
     // The server minigame has already been created 
     else if (playersByID[0] === myPlayerID) { // Host
-      setBodyMessage(`${playersByID[1]} has joined the lobby. You can now start the game.`);
+      const guestPlayer = players.find(player => player.id === playersByID[1]);
+      setBodyMessage(`${guestPlayer?.userName} has joined the lobby. You can now start the game.`);
       setIsStartButtonHidden(false);
     } 
     else { // Guest
-      setBodyMessage(`Waiting for host ${playersByID[0]} to start ...`);
+      const hostPlayer = players.find(player => player.id === playersByID[0]);
+      setBodyMessage(`Waiting for host ${hostPlayer?.userName} to start ...`);
     }
-  }, [myPlayerID, playersByID]);
+  }, [myPlayerID, players, playersByID]);
 
-
-
+  /**
+   * Host can start the game, which will trigger the socket client to emit the start_game message
+   */
+  const startGame = async () => {
+    if (socket) {
+      const gameStarted = await MinigameService.startMinigame(socket, minigameArea.label);
+      if (gameStarted) {
+        setGameStarted(true);
+      }
+    }
+  }
 
   return (
-    <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader><ModalBody>{bodyMessage}</ModalBody><ModalCloseButton /><ModalFooter>
-      <Button onClick={closeModal} hidden={isStartButtonHidden}>Start Game</Button>
+    <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader>
+    <ModalBody>
+      {isJoiningGameRoom ? "Joining...." : "Joined game waiting room! "}
+      {bodyMessage}
+    </ModalBody><ModalCloseButton /><ModalFooter>
+      <Button onClick={startGame} hidden={isStartButtonHidden}>Start Game</Button>
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter></>
   );
@@ -79,8 +102,9 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
       myPlayerID: string;
       closeModal: ()=>void;
       newMinigameLabel: string;
+      isJoiningGameRoom: boolean;
   }
-  export default function NewMinigameModal( {isOpen, myPlayerID, closeModal, newMinigameLabel} : NewMinigameModalProps): JSX.Element {
+  export default function NewMinigameModal( {isOpen, myPlayerID, closeModal, newMinigameLabel, isJoiningGameRoom} : NewMinigameModalProps): JSX.Element {
     // Only the minigame label is passed into this modal for both the host and guest. After the host creates the minigame,
     // it is updated on the server, so the useMinigameAreas() hook will update the minigameAreas list here. Then, the label is 
     // used to actually find the area. 
@@ -90,18 +114,38 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal} : NewMinigame
     const minigameAreas = useMinigameAreas();
     const newMinigame = minigameAreas.find(mg => mg.label === newMinigameLabel);
 
-      const video = useMaybeVideo()
-  
-      if (newMinigame) {
-        return (
-          <Modal isOpen={isOpen} onClose={()=>{closeModal(); video?.unPauseGame()}} closeOnOverlayClick={false}>
-            <ModalOverlay />
-            <ModalContent>
-              <NewMinigameWaiting minigameArea={newMinigame} myPlayerID={myPlayerID} closeModal={closeModal}/>
-            </ModalContent>
-          </Modal>
-        );
+    const [isGameStarted, setGameStarted] = useState<boolean>(false);
+    const {socket} = useCoveyAppState();
+
+    /**
+     * When component gets rendered, this allows the guest to set up a listener waiting for the game to be started
+     */
+    const handleGameStart = useCallback(() => {
+      if (socket && newMinigame) {
+        MinigameService.onStartgame(socket, newMinigame.label, () => {
+          setGameStarted(true);
+        })
       }
-      return <></>
+    }, [newMinigame, socket]);
+
+    useEffect(() => {
+      handleGameStart();
+    }, [handleGameStart])
+
+
+    const video = useMaybeVideo()
+
+    if (newMinigame) {
+      return (
+        <Modal isOpen={isOpen} onClose={()=>{closeModal(); video?.unPauseGame()}} closeOnOverlayClick={false}>
+          <ModalOverlay />
+          <ModalContent>
+            {!isGameStarted && <NewMinigameWaiting minigameArea={newMinigame} myPlayerID={myPlayerID} closeModal={closeModal} setGameStarted={setGameStarted} isJoiningGameRoom={isJoiningGameRoom}/>}
+            {isGameStarted && <TicTacToeGameModal closeModal={closeModal}/>}
+          </ModalContent>
+        </Modal>
+      );
+    }
+    return <></>
   }
   
