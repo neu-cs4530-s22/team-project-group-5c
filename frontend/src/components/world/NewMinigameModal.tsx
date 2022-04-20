@@ -14,6 +14,7 @@ import MinigameService from '../../classes/MinigameService';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
+import usePlayersInTown from '../../hooks/usePlayersInTown';
 import TicTacToeGameModal from '../TicTacToeGame/TicTacToeGameModal';
   
   
@@ -33,6 +34,7 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
   const {socket} = useCoveyAppState();
+  const players = usePlayersInTown();
 
   // Sets the listeners of the minigame area to perform the operations whenever they are called 
   // onPlayersChange will set the players list based on what is passed in
@@ -59,13 +61,15 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     }
     // The server minigame has already been created 
     else if (playersByID[0] === myPlayerID) { // Host
-      setBodyMessage(`${playersByID[1]} has joined the lobby. You can now start the game.`);
+      const guestPlayer = players.find(player => player.id === playersByID[1]);
+      setBodyMessage(`${guestPlayer?.userName} has joined the lobby. You can now start the game.`);
       setIsStartButtonHidden(false);
     } 
     else { // Guest
-      setBodyMessage(`Waiting for host ${playersByID[0]} to start ...`);
+      const hostPlayer = players.find(player => player.id === playersByID[0]);
+      setBodyMessage(`Waiting for host ${hostPlayer?.userName} to start ...`);
     }
-  }, [myPlayerID, playersByID]);
+  }, [myPlayerID, players, playersByID]);
 
   /**
    * Host can start the game, which will trigger the socket client to emit the start_game message
