@@ -73,8 +73,10 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
      */
     const startGame = async () => {
       if (socket) {
-        const gameStarted = false; //await MinigameService.startMinigame(socket, minigameArea.label);
+        const gameStarted = false;
+        //await MinigameService.startMinigame(socket, minigameArea.label);
         if (gameStarted) {
+            const x = 1;
             //
         //   setGameStarted(true);
         }

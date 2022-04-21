@@ -1,5 +1,5 @@
 /* eslint-disable no-nested-ternary */
-import { Button, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
+import { Button, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton, ModalFooter, ModalHeader, Grid } from '@chakra-ui/react';
 import styled from "styled-components";
 import React, { useCallback, useEffect, useState } from 'react';
 import { PlayMatrix } from './TicTacToeTypes';
@@ -7,6 +7,7 @@ import useCoveyAppState from '../../hooks/useCoveyAppState';
 import MinigameService from '../../classes/MinigameService';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import GameOverModal from '../world/GameOverModal'
+import GridModal from './GridModal'
 
 const GameContainer = styled.div`
   display: flex;
@@ -70,8 +71,6 @@ const O = styled.span`
     content: "O";
   }
 `;
-
-
 
 type TicTacToeGameModalProps = {
   minigameArea: MinigameArea;
@@ -206,46 +205,10 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   }, [handleGameUpdate, handleGameOver])
 
 
-
   return (
-    <><ModalHeader>Minigame {gameOverMessage} </ModalHeader>
-    <ModalBody>
-    <GameContainer>
-      {(!playerTurn) && <PlayStopper />}
-      {matrix.map((row, rowIdx) => (
-          <RowContainer key='row-container'>
-            {row.map((column, columnIdx) => (
-              <Cell
-                key='cell'
-                borderRight={columnIdx < 2}
-                borderLeft={columnIdx > 0}
-                borderBottom={rowIdx < 2}
-                borderTop={rowIdx > 0}
-                onClick={() =>
-                  updateGameMatrix(columnIdx, rowIdx, playerSymbol)
-                }
-              >
-                {column && column !== "null" ? (
-                  column === "x" ? (
-                    <X />
-                  ) : (
-                    <O />
-                  )
-                ) : null}
-              </Cell>
-            ))}
-          </RowContainer>
-        ))}
-    </GameContainer>
-    </ModalBody><ModalCloseButton /><ModalFooter>
-    <Button onClick={closeModal}>Cancel</Button>
-    </ModalFooter>
-    
-    {/* <ModalBody>
+    <> 
+      {!gameOver && <GridModal playerTurn={playerTurn} matrix={matrix} playerSymbol={playerSymbol} closeModal={closeModal} updateGameMatrix={updateGameMatrix}/>}
       {gameOver && <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal}/>}
-    </ModalBody><ModalCloseButton /><ModalFooter>
-    <Button onClick={closeModal}>Cancel</Button> */}
-
     </>
   )
 }
