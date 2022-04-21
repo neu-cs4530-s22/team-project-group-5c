@@ -33,9 +33,8 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
   //   socket.broadcast.to(roomId).emit("updateGame", matrix);
   // });
 
-  socket.on('game_win', async (message: string, minigameLabel: string) => {
-    console.log(message);
-    socket.to(minigameLabel).emit('on_game_win', message);
+  socket.on('game_over', async (message: string, minigameLabel: string) => {
+    socket.to(minigameLabel).emit('on_game_over', message);
   });
 
 

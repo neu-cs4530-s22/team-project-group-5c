@@ -97,15 +97,13 @@ export default class MinigameService {
   //   socket.on("start_game", listiner);
   // }
 
-  public static async gameWin(socket: Socket, minigameLabel: string, message: string) {
-    console.log(message);
-    socket.emit("game_win", message, minigameLabel);
+  public static async gameOver(socket: Socket, minigameLabel: string, message: string) {
+    socket.emit("game_over", message, minigameLabel);
   }
 
-  public static onGameWin(socket: Socket, listiner: (message: string) => void) {
-    socket.on("on_game_win", ( message: string) => {
-      console.log(message);
-      listiner(message);
+  public static onGameOver(socket: Socket, gameOverListener: (message: string) => void) {
+    socket.on("on_game_over", ( message: string) => {
+      gameOverListener(message);
     });
   }
 }

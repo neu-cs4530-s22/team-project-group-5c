@@ -1,11 +1,12 @@
 /* eslint-disable no-nested-ternary */
-import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
+import { Button, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
 import styled from "styled-components";
 import React, { useCallback, useEffect, useState } from 'react';
 import { PlayMatrix } from './TicTacToeTypes';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import MinigameService from '../../classes/MinigameService';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
+import GameOverModal from '../world/GameOverModal'
 
 const GameContainer = styled.div`
   display: flex;
@@ -92,6 +93,8 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
 
   const [playerSymbol, setPlayerSymbol] = useState<'x'|'o'>(playerSymbolStart);
   const [playerTurn, setPlayerTurn] = useState<boolean>(playerTurnStart);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [gameOverMessage, setGameOverMessage] = useState<string>('You Lost!');
 
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
@@ -164,14 +167,13 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     if (socket) {
       MinigameService.updateGame(socket, roomLabel, newMatrix);
       const [currentPlayerWon, otherPlayerWon] = checkGameState(newMatrix);
-      console.log("MEEEEE", currentPlayerWon);
-      console.log("OTHERRRRR", otherPlayerWon);
+
       if (currentPlayerWon && otherPlayerWon) {
-        await MinigameService.gameWin(socket, roomLabel, "The Game is a TIE!");
+        await MinigameService.gameOver(socket, roomLabel, "The Game is a TIE!");
+        setGameOverMessage("The Game is a TIE!")
       } else if (currentPlayerWon && !otherPlayerWon) {
-        console.log("I WON THE GAME");
-        await MinigameService.gameWin(socket, roomLabel, "You Lost!");
-        console.log('after await')
+        await MinigameService.gameOver(socket, roomLabel, "You Lost!");
+        setGameOverMessage("Congrats You Won!")
       }
 
       setPlayerTurn(false);
@@ -188,24 +190,25 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [checkGameState, socket]);
 
-  const handleGameWin = useCallback(() => {
+  const handleGameOver = useCallback(() => {
     if (socket) {
-      MinigameService.onGameWin(socket, (message: string) => {
+      MinigameService.onGameOver(socket, (message: string) => {
+        setGameOverMessage(message);
         setPlayerTurn(false);
-        console.log(message);
+        setGameOver(true);
       })
     }
   }, [socket]);
 
   useEffect(() => {
     handleGameUpdate();
-    handleGameWin();
-  }, [handleGameUpdate, handleGameWin])
+    handleGameOver();
+  }, [handleGameUpdate, handleGameOver])
 
 
 
   return (
-    <><ModalHeader>Minigame</ModalHeader>
+    <><ModalHeader>Minigame {gameOverMessage} </ModalHeader>
     <ModalBody>
     <GameContainer>
       {(!playerTurn) && <PlayStopper />}
@@ -236,6 +239,13 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     </GameContainer>
     </ModalBody><ModalCloseButton /><ModalFooter>
     <Button onClick={closeModal}>Cancel</Button>
-    </ModalFooter></>
+    </ModalFooter>
+    
+    {/* <ModalBody>
+      {gameOver && <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal}/>}
+    </ModalBody><ModalCloseButton /><ModalFooter>
+    <Button onClick={closeModal}>Cancel</Button> */}
+
+    </>
   )
 }
