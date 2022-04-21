@@ -34,6 +34,13 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
   // });
 
   socket.on('game_over', async (message: string, minigameLabel: string) => {
+    console.log("in socket");
+    console.log(message);
+    if (message == "You Lost!") {
+      console.log("Yessir")
+      socket.emit('on_game_over', "Congrats You Won!");
+    }
+    socket.emit('on_game_over', message);
     socket.to(minigameLabel).emit('on_game_over', message);
   });
 

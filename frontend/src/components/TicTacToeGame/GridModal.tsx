@@ -83,10 +83,10 @@ export default function GridModal({playerTurn, matrix, playerSymbol, closeModal,
       <GameContainer>
         {(!playerTurn) && <PlayStopper />}
         {matrix.map((row, rowIdx) => (
-            <RowContainer key='row-container'>
+            <RowContainer key={`row-container ${rowIdx}`}>
               {row.map((column, columnIdx) => (
                 <Cell
-                  key='cell'
+                  key={`cell ${columnIdx}`}
                   borderRight={columnIdx < 2}
                   borderLeft={columnIdx > 0}
                   borderBottom={rowIdx < 2}

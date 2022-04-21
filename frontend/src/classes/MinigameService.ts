@@ -1,5 +1,3 @@
-import { LabelImportant } from "@material-ui/icons";
-import { AnyARecord } from "dns";
 import { Socket } from "socket.io-client";
 import { PlayMatrix, StartGameOptions } from "../components/TicTacToeGame/TicTacToeTypes";
 /**
@@ -75,8 +73,6 @@ export default class MinigameService {
   // }
 
   public static async updateGame(socket: Socket, minigameLabel: string, gameMatrix: PlayMatrix) {
-    console.log("updateGameSockett matrix is:  ", gameMatrix);
-    console.log("roomid in minigame service  update game is: ", minigameLabel)
     socket.emit("update_game", gameMatrix, minigameLabel);
   }
 
