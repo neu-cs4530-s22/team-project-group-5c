@@ -155,9 +155,9 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     const handleGameStart = useCallback(() => {
       if (socket && newMinigame) {
         MinigameService.onStartgame(socket, newMinigame.label, (options: StartGameOptions) => {
-          console.log("OPTIONS SYMBOL IN MODAL ON START CALLBACK", options.symbol);
+          // console.log("OPTIONS SYMBOL IN MODAL ON START CALLBACK", options.symbol);
           setPlayerSymbol(options.symbol);
-          console.log('NEW PLAYER SYMBOL', playerSymbol);
+          // console.log('NEW PLAYER SYMBOL', playerSymbol);
           if (options.start) setPlayerTurn(true);
           else setPlayerTurn(false);
           setGameStarted(true);

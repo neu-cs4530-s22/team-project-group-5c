@@ -155,6 +155,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   }, [playerSymbol]);
 
   const updateGameMatrix = async (column: number, row: number, symbol: "x" | "o") => {
+    console.log("updating game...");
     const newMatrix = [...matrix];
 
     if (newMatrix[row][column] === null || newMatrix[row][column] === "null") {
@@ -198,7 +199,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
         setGameOverMessage(message);
         // console.log(gameOverMessage);
         setGameOver(true);
+        console.log(gameOver);
         setPlayerTurn(false);
+        console.log("DONE")
       })
     }
   }, [socket]);

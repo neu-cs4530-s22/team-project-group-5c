@@ -99,6 +99,7 @@ export default class MinigameService {
 
   public static onGameOver(socket: Socket, gameOverListener: (message: string) => void) {
     socket.on("on_game_over", ( message: string) => {
+      console.log(message);
       gameOverListener(message);
     });
   }
