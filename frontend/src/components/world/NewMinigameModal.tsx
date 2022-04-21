@@ -15,15 +15,16 @@ import useCoveyAppState from '../../hooks/useCoveyAppState';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import TicTacToeGameModal from '../TicTacToeGame/TicTacToeGameModal';
-import { Game } from '../TicTacToe';
 import gameContext, { IGameContextProps } from '../TicTacToe/gameContext';
+import usePlayersInTown from '../../hooks/usePlayersInTown';
+import { StartGameOptions } from '../TicTacToeGame/TicTacToeTypes';
   
   
 type NewMinigameWaitingProps = {
   minigameArea: MinigameArea;
   myPlayerID: string;
   closeModal: ()=>void;
-   setGameStarted: (arg0: boolean) => void;
+  setGameStarted: (arg0: boolean) => void;
   isJoiningGameRoom: boolean;
 }
 
@@ -36,9 +37,10 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
   const [bodyMessage, setBodyMessage] = useState<string>("");
   const [isStartButtonHidden, setIsStartButtonHidden] = useState<boolean>(true);
   const {socket} = useCoveyAppState();
-  const [isInRoom, setInRoom] = useState(false);
-  const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
-  const [isPlayerTurn, setPlayerTurn] = useState(false);
+  const players = usePlayersInTown();
+  // const [isInRoom, setInRoom] = useState(false);
+  // const [playerSymbol, setPlayerSymbol] = useState<"x" | "o">("x");
+  // const [isPlayerTurn, setPlayerTurn] = useState(false);
   // const [isGameStarted, setGameStarted] = useState(false);
 
   // const gameContextValue: IGameContextProps = {
@@ -79,13 +81,15 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     }
     // The server minigame has already been created 
     else if (playersByID[0] === myPlayerID) { // Host
-      setBodyMessage(`${playersByID[1]} has joined the lobby. You can now start the game.`);
+      const guestPlayer = players.find(player => player.id === playersByID[1]);
+      setBodyMessage(`${guestPlayer?.userName} has joined the lobby. You can now start the game.`);
       setIsStartButtonHidden(false);
     } 
     else { // Guest
-      setBodyMessage(`Waiting for host ${playersByID[0]} to start ...`);
+      const hostPlayer = players.find(player => player.id === playersByID[0]);
+      setBodyMessage(`Waiting for host ${hostPlayer?.userName} to start ...`);
     }
-  }, [myPlayerID, playersByID]);
+  }, [myPlayerID, players, playersByID]);
 
   /**
    * Host can start the game, which will trigger the socket client to emit the start_game message
@@ -111,7 +115,6 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter></>
   );
-
 }
 
 
@@ -132,32 +135,35 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
     const minigameAreas = useMinigameAreas();
     const newMinigame = minigameAreas.find(mg => mg.label === newMinigameLabel);
 
-     const [isGameStarted, setGameStarted] = useState<boolean>(false);
+    const [isGameStarted, setGameStarted] = useState<boolean>(false);
+    const [playerSymbol, setPlayerSymbol] = useState<'x'|'o'>('x');
+    const [playerTurn, setPlayerTurn] = useState<boolean>(true);
     const {socket} = useCoveyAppState();
 
-    const {
-      playerSymbol,
-      setPlayerSymbol,
-      setPlayerTurn,
-      isPlayerTurn,
-      // setGameStarted,
-     //  isGameStarted,
-    } = useContext(gameContext);
+    // const {
+    //   playerSymbol,
+    //   setPlayerSymbol,
+    //   setPlayerTurn,
+    //   isPlayerTurn,
+    //   // setGameStarted,
+    //  //  isGameStarted,
+    // } = useContext(gameContext);
 
     /**
      * When component gets rendered, this allows the guest to set up a listener waiting for the game to be started
      */
     const handleGameStart = useCallback(() => {
       if (socket && newMinigame) {
-        MinigameService.onStartgame(socket, newMinigame.label, (options) => {
+        MinigameService.onStartgame(socket, newMinigame.label, (options: StartGameOptions) => {
           console.log("OPTIONS SYMBOL IN MODAL ON START CALLBACK", options.symbol);
-          setGameStarted(true);
           setPlayerSymbol(options.symbol);
+          console.log('NEW PLAYER SYMBOL', playerSymbol);
           if (options.start) setPlayerTurn(true);
           else setPlayerTurn(false);
+          setGameStarted(true);
         })
       }
-    }, [newMinigame, socket]);
+    }, [newMinigame, playerSymbol, socket]);
 
     useEffect(() => {
       handleGameStart();
@@ -172,8 +178,8 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
           <ModalOverlay />
           <ModalContent>
             {!isGameStarted && <NewMinigameWaiting minigameArea={newMinigame} myPlayerID={myPlayerID} closeModal={closeModal} setGameStarted={setGameStarted} isJoiningGameRoom={isJoiningGameRoom}/>}
-            {/* {isGameStarted && <TicTacToeGameModal closeModal={closeModal}/>} */}
-            {isGameStarted && <Game roomLabel={newMinigame.label} />}
+            {isGameStarted && <TicTacToeGameModal minigameArea={newMinigame} closeModal={closeModal} roomLabel={newMinigame.label} playerSymbolStart={playerSymbol} playerTurnStart={playerTurn}/>}
+            {/* {isGameStarted && < roomLabel={newMinigame.label} />} */}
           </ModalContent>
         </Modal>
       );
