@@ -155,7 +155,6 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   }, [playerSymbol]);
 
   const updateGameMatrix = async (column: number, row: number, symbol: "x" | "o") => {
-    console.log("updating game...");
     const newMatrix = [...matrix];
 
     if (newMatrix[row][column] === null || newMatrix[row][column] === "null") {
@@ -169,10 +168,8 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
 
       if (currentPlayerWon && otherPlayerWon) {
         await MinigameService.gameOver(socket, roomLabel, "The Game is a TIE!");
-        // setGameOverMessage("The Game is a TIE!")
       } else if (currentPlayerWon && !otherPlayerWon) {
         await MinigameService.gameOver(socket, roomLabel, "You Lost!");
-        // setGameOverMessage("Congrats You Won!")
       }
 
       setPlayerTurn(false);
@@ -192,16 +189,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   const handleGameOver = useCallback(() => {
     if (socket) {
       MinigameService.onGameOver(socket, (message: string) => {
-        // console.log(gameOverMessage);
-        console.log("Here");
-        console.log(message);
-        console.log(gameOver);
         setGameOverMessage(message);
-        // console.log(gameOverMessage);
         setGameOver(true);
-        console.log(gameOver);
         setPlayerTurn(false);
-        console.log("DONE")
       })
     }
   }, [socket]);
