@@ -170,6 +170,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
         await MinigameService.gameOver(socket, roomLabel, "The Game is a TIE!");
       } else if (currentPlayerWon && !otherPlayerWon) {
         await MinigameService.gameOver(socket, roomLabel, "You Lost!");
+        // leaderboard.addScore(playerUsername);
       }
 
       setPlayerTurn(false);

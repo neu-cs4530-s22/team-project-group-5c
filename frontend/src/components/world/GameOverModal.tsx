@@ -9,6 +9,7 @@ import {
     ModalOverlay,
     } from '@chakra-ui/react';
 import {useCallback, useEffect,useState } from 'react';
+import TicTacToeLeaderBoard from '../../classes/Leaderboard';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
 import MinigameService from '../../classes/MinigameService';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
@@ -17,6 +18,7 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
   type GameOverModalProps = {
     // minigameArea: MinigameArea;
     // myPlayerID: string;
+    // leaderboard: TicTacToeLeaderBoard;
     closeModal: ()=>void;
     // setGameStarted: (arg0: boolean) => void;
     gameOverMessage: string;
@@ -71,25 +73,29 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
     /**
      * Host can start the game, which will trigger the socket client to emit the start_game message
      */
-    const startGame = async () => {
-      if (socket) {
-        const gameStarted = false;
-        //await MinigameService.startMinigame(socket, minigameArea.label);
-        if (gameStarted) {
-            const x = 1;
-            //
-        //   setGameStarted(true);
-        }
-      }
+    const startNewGame = async () => {
+        const x = 1;
+    //   if (socket) {
+    //     const gameStarted = false;
+    //     //await MinigameService.startMinigame(socket, minigameArea.label);
+    //     if (gameStarted) {
+    //         const x = 1;
+    //         //
+    //     //   setGameStarted(true);
+    //     }
+    //   }
     }
     
     return (
       <><ModalHeader> Game Over: {gameOverMessage} </ModalHeader>
       <ModalBody>
           Leaderboard
-        {/* LEADERBOARD STUFF */}
+        {/* {leaderboard.top10.keys().map(player => { 
+            entry.
+        }) */}
+{/*        /* LEADERBOARD STUFF */}
       </ModalBody><ModalCloseButton /><ModalFooter>
-        <Button onClick={startGame} hidden={isStartButtonHidden}>Start New Game</Button>
+        <Button onClick={startNewGame} colorScheme='purple' mr={3}>Start New Game</Button>
         <Button onClick={closeModal}>Close</Button>
       </ModalFooter></>
     );
