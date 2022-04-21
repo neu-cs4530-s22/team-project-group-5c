@@ -1,7 +1,7 @@
 import { LabelImportant } from "@material-ui/icons";
 import { AnyARecord } from "dns";
 import { Socket } from "socket.io-client";
-import { IPlayMatrix, IStartGame } from "../components/TicTacToe";
+import { IPlayMatrix, IStartGame } from "../components/TicTacToe/ETC";
 /**
  * Minigame service client that performs all of the socket connections. These functions are all static functions
  * that perform socket call initializations. 
@@ -32,7 +32,7 @@ export default class MinigameService {
   public static async startMinigame(socket: Socket, minigameLabel: string): Promise<boolean> {
     return new Promise((rs, rj) => {
       socket.emit("start_game", minigameLabel);
-      socket.on('host_start_game', ()=>rs(true));
+      socket.on('host_start_game', () => rs(true));
     });
   }
 
@@ -85,8 +85,7 @@ export default class MinigameService {
     listiner: (matrix: IPlayMatrix) => void
   ) {
     console.log("ON GAME UPDATTE IN SERVICE ::::::::::::::::");
-    socket?.on("on_game_update", (matrix: any) => listiner(matrix));
-    
+    socket?.on("on_game_update", (matrix: any) => listiner(matrix));   
   }
 
   public static async onStartGame(
@@ -103,7 +102,7 @@ export default class MinigameService {
   }
 
   public static async onGameWin(socket: Socket, listiner: (message: string) => void) {
-    socket.on("on_game_win", ( message: any) => listiner(message));
+    socket.on("on_game_win", (message: any) => listiner(message));
   }
 }
 

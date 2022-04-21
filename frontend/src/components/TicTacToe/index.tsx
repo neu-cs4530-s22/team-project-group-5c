@@ -1,9 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
+import { nanoid } from "nanoid";
+import { IPlayMatrix, IStartGame } from "./ETC";
 import gameContext from "./gameContext";
 import MinigameService from "../../classes/MinigameService";
+
 import useCoveyAppState from "../../hooks/useCoveyAppState";
-import { nanoid } from "nanoid";
 import MinigameArea from "../../classes/MinigameArea";
 
 // import socketService from "./services/socketService";
@@ -75,14 +77,10 @@ const O = styled.span`
   }
 `;
 
-export type IPlayMatrix = Array<Array<string | null>>;
-export interface IStartGame {
-  start: boolean;
-  symbol: "x" | "o";
-}
 
-export function Game(roomLabel: any) {
-  const [matrix, setMatrix] = useState<IPlayMatrix>([
+
+export default function Game(roomLabel: any) {
+  const [smatrix, setMatrix] = useState<IPlayMatrix>([
     [null, null, null],
     [null, null, null],
     [null, null, null],
@@ -116,72 +114,70 @@ export function Game(roomLabel: any) {
   //   // changeMatrix();
   //   },);
 
-
   const {
-   playerSymbol,
-   setPlayerSymbol,
-   setPlayerTurn,
-   isPlayerTurn,
+    playerSymbol,
+    setPlayerSymbol,
+    setPlayerTurn,
+    isPlayerTurn,
     setGameStarted,
     isGameStarted,
   } = useContext(gameContext);
 
 
   const checkGameState = (matrix: IPlayMatrix) => {
-    for (let i = 0; i < matrix?.length; i++) {
-      let row = [];
-      for (let j = 0; j < matrix[i].length; j++) {
+    for (let i = 0; i < matrix?.length; i += 1) {
+      const row = [];
+      for (let j = 0; j < matrix[i].length; j += 1) {
         row.push(matrix[i][j]);
       }
 
       console.log("CheckGameState Player Symbol: ", playerSymbol);
       if (row.every((value) => value && value === playerSymbol)) {
         return [true, false];
-      } else if (row.every((value) => value && value !== playerSymbol)) {
+      } 
+      if (row.every((value) => value && value !== playerSymbol)) {
         return [false, true];
       }
     }
 
-    for (let i = 0; i < matrix.length; i++) {
-      let column = [];
-      for (let j = 0; j < matrix[i].length; j++) {
+    for (let i = 0; i < matrix.length; i += 1) {
+      const column = [];
+      for (let j = 0; j < matrix[i].length; j += 1) {
         column.push(matrix[j][i]);
       }
 
       if (column.every((value) => value && value === playerSymbol)) {
         return [true, false];
-      } else if (column.every((value) => value && value !== playerSymbol)) {
+      } 
+      if (column.every((value) => value && value !== playerSymbol)) {
         return [false, true];
       }
     }
 
     if (matrix[1][1]) {
-      if (matrix[0][0] === matrix[1][1] && matrix[2][2] === matrix[1][1]) {
+      if (matrix[0][0] === matrix[1][1] && matrix[1][1] === matrix[2][2]) {
         if (matrix[1][1] === playerSymbol) return [true, false];
-        else return [false, true];
+        return [false, true];
       }
 
       if (matrix[2][0] === matrix[1][1] && matrix[0][2] === matrix[1][1]) {
         if (matrix[1][1] === playerSymbol) return [true, false];
-        else return [false, true];
+        return [false, true];
       }
     }
 
-    //Check for a tie
+    // Check for a tie
     if (matrix.every((m) => m.every((v) => v !== null))) {
       return [true, true];
     }
-
     return [false, false];
-   };
+  };
 
   const updateGameMatrix = (column: number, row: number, symbol: "x" | "o") => {
     console.log(symbol, " is SYMBOL in updateGameMatrix");
-    const newMatrix = [...matrix];
+    const newMatrix = [...smatrix];
 
-
-    
-
+    // set the new matrix by given matrix, column and row
     if (newMatrix[row][column] === null || newMatrix[row][column] === "null") {
       newMatrix[row][column] = symbol;
       setMatrix(newMatrix);
@@ -199,14 +195,12 @@ export function Game(roomLabel: any) {
         MinigameService.gameWin(socket, "You Lost!");
         alert("You Won!");
       }
-
-      
     }
   };
 
   const handleGameUpdate = () => {
     if (socket)
-    console.log("socket is valid (in handle game update line 179")
+      console.log("socket is valid (in handle game update line 179")
       MinigameService.onGameUpdate(socket, (newMatrix) => {
         setMatrix(newMatrix);
         console.log("matrix is:::", newMatrix)
@@ -219,11 +213,9 @@ export function Game(roomLabel: any) {
 
     console.log("handle game starrt ::::::::::::::::");
     console.log(playerSymbol, "player symbol before on start game");
-    if (socket)
-
-    
-   // MinigameService.onStartgame(socke)
-      MinigameService.onStartGame(socket, (options: any) => {
+    if (socket)    
+      // MinigameService.onStartgame(socket)
+      MinigameService.onStartGame(socket, (options) => {
         // console.log("options SYMBOL", options);
         setGameStarted(true);
         setPlayerSymbol(options.symbol);
@@ -267,54 +259,35 @@ export function Game(roomLabel: any) {
   //   handleGameWin();
   // }, []);
 
-    useEffect(() => {
-      handleGameUpdate();
+  useEffect(() => {
+    handleGameUpdate();
     handleGameStart();
     handleGameWin();
   }, [handleGameUpdate(), handleGameStart(), handleGameWin()]);
 
   const iff = (condition: boolean, then: JSX.Element , otherwise: JSX.Element) => condition ? then : otherwise;
 
-  //   { column && column !== "null" ? (
-    // iff(column === "x", <X />, <O />)) : null
-  // }
-
   return (
     <GameContainer>
-     
-       {/* {(!isPlayerTurn) && <PlayStopper />}  */}
-      {matrix.map((row, rowIdx) => (
-        // return (
-          <RowContainer key={nanoid()}>
-            {row.map((column, columnIdx) => (
-              <Cell key={nanoid()}
-                borderRight={columnIdx < 2}
-                borderLeft={columnIdx > 0}
-                borderBottom={rowIdx < 2}
-                borderTop={rowIdx > 0}
-                onClick={() =>
-                     
-                     updateGameMatrix(columnIdx, rowIdx, playerSymbol)
-            
-
-                }
-              >
-            
-
-{column && column !== "null" ? (
-                  column === "x" ? (
-                    <X />
-                  ) : (
-                    <O />
-                  )
-                ) : null}
-  
-              </Cell>
-            
-            ))}
-          </RowContainer>
-        )
-      )}
+      {/* {(!isPlayerTurn) && <PlayStopper />}  */}
+      {smatrix.map((row, rowIdx) => 
+        <RowContainer key={nanoid()}>
+          {row.map((column, columnIdx) => (
+            <Cell key={nanoid()}
+              borderRight={columnIdx < 2}
+              borderLeft={columnIdx > 0}
+              borderBottom={rowIdx < 2}
+              borderTop={rowIdx > 0}
+              onClick = {() =>
+                updateGameMatrix(columnIdx, rowIdx, playerSymbol)
+              }
+            >
+              {/* {column && column !== "null" ? (column === "x" ? (<X />) : (<O />)) : null} */}
+              {iff((column !== null && column !== "null"), iff(column === "x", <X />, <O />), <></>)}   
+            </Cell>
+          ))}
+        </RowContainer>      
+      )};
     </GameContainer>
   );
 }
