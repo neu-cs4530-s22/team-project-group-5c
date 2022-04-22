@@ -1,7 +1,8 @@
-/* eslint-disable no-nested-ternary */
+/* eslint-disable react/no-array-index-key */
+import React from 'react';
 import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
 import styled from "styled-components";
-import { PlayMatrix } from './TicTacToeTypes';
+import { GameBoardMatrix } from './TicTacToeTypes';
 
 const GameContainer = styled.div`
   display: flex;
@@ -22,7 +23,7 @@ interface ICellProps {
   borderBottom?: boolean;
 }
 
-const Cell = styled.div<ICellProps>`
+const ActiveCell = styled.div<ICellProps>`
   width: 13em;
   height: 9em;
   display: flex;
@@ -38,6 +39,19 @@ const Cell = styled.div<ICellProps>`
   &:hover {
     background-color: #8d44ad28;
   }
+`;
+
+const InactiveCell = styled.div<ICellProps>`
+  width: 13em;
+  height: 9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  border-top: ${({ borderTop }) => borderTop && "3px solid #8e44ad"};
+  border-left: ${({ borderLeft }) => borderLeft && "3px solid #8e44ad"};
+  border-bottom: ${({ borderBottom }) => borderBottom && "3px solid #8e44ad"};
+  border-right: ${({ borderRight }) => borderRight && "3px solid #8e44ad"};
 `;
 
 const PlayStopper = styled.div`
@@ -68,7 +82,7 @@ const O = styled.span`
 
 type TicTacToeGameModalProps = {
   playerTurn: boolean;
-  matrix: PlayMatrix;
+  matrix: GameBoardMatrix;
   playerSymbol: 'x' | 'o';
   closeModal: ()=>void;
   updateGameMatrix: (column: number, row: number, symbol: "x" | "o")=>void;
@@ -76,37 +90,72 @@ type TicTacToeGameModalProps = {
 
 export default function GridModal({playerTurn, matrix, playerSymbol, closeModal, updateGameMatrix}: TicTacToeGameModalProps): JSX.Element {
 // {gameOverMessage} 
+  type ShowCellProps = {
+    column: string | null;
+  }
+  function ShowCell({column}: ShowCellProps): JSX.Element | null {
+    if (column && column !== 'null') {
+      if (column === 'x') {
+        return (
+          <X />
+        );
+      }
+      return (
+        <O />
+      );
+    }
+    return null;
+  }
+
+  type ActiveOrInactiveCellProps = {
+    rowIdx: number,
+    columnIdx: number,
+    column: string | null,
+  }
+  function ActiveOrInactiveCell({rowIdx, columnIdx, column}: ActiveOrInactiveCellProps): JSX.Element {
+    if (matrix[rowIdx][columnIdx] === null || matrix[rowIdx][columnIdx] === "null") {
+      return (
+        <ActiveCell
+          borderRight={columnIdx < 2}
+          borderLeft={columnIdx > 0}
+          borderBottom={rowIdx < 2}
+          borderTop={rowIdx > 0}
+          onClick={() =>
+            updateGameMatrix(columnIdx, rowIdx, playerSymbol)
+          }
+        >
+          <ShowCell column={column}/>
+        </ActiveCell>
+      )
+    }
+    return (
+      <InactiveCell
+        key={`cell ${columnIdx}`}
+        borderRight={columnIdx < 2}
+        borderLeft={columnIdx > 0}
+        borderBottom={rowIdx < 2}
+        borderTop={rowIdx > 0}
+      >
+        <ShowCell column={column}/>
+      </InactiveCell>
+    )
+  }
+
   return (
     <> 
     <ModalHeader>Minigame </ModalHeader>
       <ModalBody>
-      <GameContainer>
-        {(!playerTurn) && <PlayStopper />}
-        {matrix.map((row, rowIdx) => (
-            <RowContainer key={`row-container ${rowIdx}`}>
-              {row.map((column, columnIdx) => (
-                <Cell
-                  key={`cell ${columnIdx}`}
-                  borderRight={columnIdx < 2}
-                  borderLeft={columnIdx > 0}
-                  borderBottom={rowIdx < 2}
-                  borderTop={rowIdx > 0}
-                  onClick={() =>
-                    updateGameMatrix(columnIdx, rowIdx, playerSymbol)
-                  }
-                >
-                  {column && column !== "null" ? (
-                    column === "x" ? (
-                      <X />
-                    ) : (
-                      <O />
-                    )
-                  ) : null}
-                </Cell>
-              ))}
-            </RowContainer>
-          ))}
-      </GameContainer>
+        {playerTurn? 'Your Turn!' : 'Opponent\'s turn'}
+        <GameContainer>
+          {(!playerTurn) && <PlayStopper />}
+          {matrix.map((row, rowIdx) => (
+              <RowContainer key={`row-container ${rowIdx}`}>
+                {row.map((column, columnIdx) => (
+                  <ActiveOrInactiveCell key={`cell ${columnIdx}`} rowIdx={rowIdx} columnIdx={columnIdx} column={column}/>
+                ))}
+              </RowContainer>
+            ))}
+        </GameContainer>
       </ModalBody><ModalCloseButton /><ModalFooter>
       <Button onClick={closeModal}>Cancel</Button>
     </ModalFooter>

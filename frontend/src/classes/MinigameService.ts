@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { PlayMatrix, StartGameOptions } from "../components/TicTacToeGame/TicTacToeTypes";
+import { GameBoardMatrix, StartGameOptions } from "../components/TicTacToeGame/TicTacToeTypes";
 /**
  * Minigame service client that performs all of the socket connections. These functions are all static functions
  * that perform socket call initializations. 
@@ -18,6 +18,10 @@ export default class MinigameService {
       socket.emit("join_game_room", minigameLabel);
       socket.on(`${minigameLabel}_room_joined`, () => rs(true));
     });
+  }
+
+  public static async leaveMinigameRoom(socket: Socket, minigameLabel: string) {
+    socket.emit('leave_game_room', minigameLabel);
   }
 
   /**
@@ -41,57 +45,21 @@ export default class MinigameService {
    * @param startGameListener listener callback
    */
   public static onStartgame(socket: Socket, minigameLabel: string, startGameListener: (options: StartGameOptions) => void): void {
-    // console.log("onStartgame in minigameService options: ", startGameListener)
     socket.on(`${minigameLabel}_game_started`, startGameListener);
   }
 
 
-  // public static async joinGameRoom(socket: Socket, roomId: string): Promise<boolean> {
-  //   return new Promise((rs, rj) => {
-  //     socket.emit("join_game", { roomId });
-  //     socket.on("room_joined", () => rs(true));
-  //     socket.on("room_join_error", (error: any) => rj(error));
-  //   });
-  // }
-
-  // public async updateGame(socket: Socket, gameMatrix: PlayMatrix) {
-  //   socket.emit("update_game", { matrix: gameMatrix });
-  // }
-
-  // public async onGameUpdate(
-  //   socket: Socket,
-  //   listiner: (matrix: IPlayMatrix) => void
-  // ) {
-  //   socket.on("on_game_update", ( matrix: any) => listiner(matrix));
-  // }
-
-  // public async onStartGame(
-  //   socket: Socket,
-  //   listiner: (options: IStartGame) => void
-  // ) {
-  //   socket.on("start_game", listiner);
-  // }
-
-  public static async updateGame(socket: Socket, minigameLabel: string, gameMatrix: PlayMatrix) {
+  public static async updateGame(socket: Socket, minigameLabel: string, gameMatrix: GameBoardMatrix) {
     socket.emit("update_game", gameMatrix, minigameLabel);
   }
 
   public static async onGameUpdate(
     socket: Socket,
-    updateGameListener: (matrix: PlayMatrix) => void
+    updateGameListener: (matrix: GameBoardMatrix) => void
   ) {
-    socket.on("on_game_update", ( matrix: PlayMatrix) => updateGameListener(matrix));
+    socket.on("on_game_update", ( matrix: GameBoardMatrix) => updateGameListener(matrix));
     
   }
-
-  // public static async onStartGame(
-    
-  //   socket: Socket,
-  //   listiner: (options: IStartGame) => void
-  // ) {
-  //   console.log("onStartGame is being called");
-  //   socket.on("start_game", listiner);
-  // }
 
   public static async gameOver(socket: Socket, minigameLabel: string, message: string) {
     socket.emit("game_over", message, minigameLabel);

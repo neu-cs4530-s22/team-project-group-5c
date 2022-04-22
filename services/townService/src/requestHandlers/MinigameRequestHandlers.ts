@@ -1,5 +1,7 @@
 import { Socket } from 'socket.io';
 
+type GameBoardMatrix = Array<Array<string | null>>;
+
 export default function minigameSubscriptionHandler(socket: Socket): void {
 
   // When the socket receives a join minigame message, a unique minigame label needs to be passed
@@ -11,6 +13,10 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.emit(`${minigameLabel}_room_joined`);
   });
 
+  socket.on('leave_game_room', async (minigameLabel: string) => {
+    await socket.leave(minigameLabel);
+  });
+
   // When the host starts the game, this socket listener listens for the start_game message. 
   // Once the message is received, the host client gets a host_start_game message while the guest in the room receives a game started message
   socket.on('start_game', async (minigameLabel: string) => {
@@ -18,24 +24,14 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.to(minigameLabel).emit(`${minigameLabel}_game_started`, { start: false, symbol: 'o' });
   });
 
-  // socket.on('join_game', async (minigameLabel: string) => {
-  //   socket.emit('start_game', {start: true, symbol: "x"});
-  //   socket.to(minigameLabel).emit("start_game", {start: false, symbol: "o"});
-  // });
-
-  socket.on('update_game', async (gameMatrix: any, minigameLabel: string) => {
+  socket.on('update_game', async (gameMatrix: GameBoardMatrix, minigameLabel: string) => {
     // socket.emit('on_game_update', gameMatrix);
     socket.to(minigameLabel).emit('on_game_update', gameMatrix);
   });
 
-  // socket.on("update_game", ({ matrix, roomId }) => {
-  //   console.log(`play at ${matrix} to ${roomId}`);
-  //   socket.broadcast.to(roomId).emit("updateGame", matrix);
-  // });
-
   socket.on('game_over', async (message: string, minigameLabel: string) => {
-    if (message == "You Lost!") {
-      socket.emit('on_game_over', "Congrats You Won!");
+    if (message === 'You Lost!') {
+      socket.emit('on_game_over', 'Congrats You Won!');
     } else {
       socket.emit('on_game_over', message);
     }

@@ -1017,6 +1017,12 @@ export default function WorldMap(): JSX.Element {
     }
   }, [newMinigame, socket]);
 
+  const leaveMinigameRoom = useCallback(async () => {
+    if (newMinigame && socket) {
+      await MinigameService.leaveMinigameRoom(socket, newMinigame.label);
+    }
+  }, [newMinigame, socket])
+
   // Creates a minigame only when createMinigame is set to true. This happens when the host presses space to create the game. 
   useEffect(() => {
 
@@ -1058,10 +1064,11 @@ export default function WorldMap(): JSX.Element {
     video?.pauseGame();
 
     if (newMinigame) {
-      const closeMinigameModal = () => {
-          video?.unPauseGame();
-          setNewMinigame(undefined);
-          setShouldEmitMinigameLocationMovement(true);
+      const closeMinigameModal = async () => {
+        await leaveMinigameRoom();
+        video?.unPauseGame();
+        setNewMinigame(undefined);
+        setShouldEmitMinigameLocationMovement(true);
       }
 
       return (
@@ -1075,7 +1082,7 @@ export default function WorldMap(): JSX.Element {
       );
     }
     return <></>;
-  }, [video, newMinigame, myPlayerID, isJoiningGameRoom]);
+  }, [video, newMinigame, myPlayerID, isJoiningGameRoom, leaveMinigameRoom]);
 
   return (
     <div id='app-container'>
