@@ -86,7 +86,6 @@ type TicTacToeGameModalProps = {
 export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel, playerSymbolStart, playerTurnStart}: TicTacToeGameModalProps): JSX.Element {
 
   const {socket} = useCoveyAppState();
-  const leaderboard = useLeaderboard();
 
   const [matrix, setMatrix] = useState<PlayMatrix>([
     [null, null, null],
@@ -100,8 +99,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   const [gameOverMessage, setGameOverMessage] = useState<string>('You Lost!');
 
   const curPlayer = playerSymbol === 'x' ? minigameArea.playersByID[0] : minigameArea.playersByID[1];
-  const [winnerPlayer, setWinnerPlayer] = useState<string>(curPlayer);
-  // const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(useLeaderboard());
+  const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(useLeaderboard());
   
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
@@ -179,7 +177,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
       } else if (currentPlayerWon && !otherPlayerWon) {
         console.log("here")
         await MinigameService.gameOver(socket, roomLabel, "You Lost!");
-        await MinigameService.updateLeaderBoard(socket, roomLabel, curPlayer);
+        MinigameService.updateLeaderBoard(socket, roomLabel, curPlayer);
       }
       setPlayerTurn(false);
     }
@@ -208,13 +206,14 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   const handleLeaderBoard = useCallback(() => {
     if (socket) {
       MinigameService.onUpdateLeaderBoard(socket, (playerID: string) => {
-        console.log("bug here?")
-        setWinnerPlayer(playerID);
         leaderboard.addScore(playerID);
-        console.log(leaderboard);
+        const updatedLeaderboard = new TicTacToeLeaderBoard(leaderboard.scores);
+        setLeaderboard(updatedLeaderboard);        
       })
     }
   }, [socket, leaderboard])
+
+  const gameoverModal = <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal} minigameLabel={minigameArea.label} leaderboard={leaderboard}/>
 
   useEffect(() => {
     handleGameUpdate();

@@ -84,12 +84,12 @@ export default class MinigameService {
   }
 
   // Kim Leaderboard 
-  public static async updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
+  public static updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
     console.log('updateLeaderBoard in MinigameService');
     socket.emit('update_leaderboard', minigameLabel, playerID);
   }
 
-  public static async onUpdateLeaderBoard(
+  public static onUpdateLeaderBoard(
     socket: Socket, 
     leaderboardListener: (playerID: string) => void 
   ) {
