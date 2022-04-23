@@ -1,7 +1,10 @@
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable no-nested-ternary */
 import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
+import React  from 'react';
 import styled from "styled-components";
 import { PlayMatrix } from './TicTacToeTypes';
+
 
 const GameContainer = styled.div`
   display: flex;

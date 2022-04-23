@@ -30,7 +30,7 @@ export default class MinigameService {
   public static async startMinigame(socket: Socket, minigameLabel: string): Promise<boolean> {
     return new Promise((rs, rj) => {
       socket.emit("start_game", minigameLabel);
-      socket.on('host_start_game', ()=>rs(true));
+      socket.on('host_start_game', () => rs(true));
     });
   }
 
@@ -80,18 +80,24 @@ export default class MinigameService {
     socket: Socket,
     updateGameListener: (matrix: PlayMatrix) => void
   ) {
-    socket.on("on_game_update", ( matrix: PlayMatrix) => updateGameListener(matrix));
-    
+    socket.on("on_game_update", (matrix: PlayMatrix) => updateGameListener(matrix));
   }
 
-  // public static async onStartGame(
-    
-  //   socket: Socket,
-  //   listiner: (options: IStartGame) => void
-  // ) {
-  //   console.log("onStartGame is being called");
-  //   socket.on("start_game", listiner);
-  // }
+  // Kim Leaderboard 
+  public static async updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
+    console.log('updateLeaderBoard in MinigameService');
+    socket.emit('update_leaderboard', minigameLabel, playerID);
+  }
+
+  public static async onUpdateLeaderBoard(
+    socket: Socket, 
+    leaderboardListener: (playerID: string) => void 
+  ) {
+    socket.on('on_update_leaderboard', (playerID: string) => {
+      leaderboardListener(playerID)
+    });
+    console.log('onUpdateLeaderBaord in MinigameService');
+  }
 
   public static async gameOver(socket: Socket, minigameLabel: string, message: string) {
     socket.emit("game_over", message, minigameLabel);

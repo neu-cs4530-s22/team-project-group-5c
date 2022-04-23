@@ -61,7 +61,7 @@ function NewMinigameWaiting({minigameArea, myPlayerID, closeModal, setGameStarte
   // onMinigameAreaDestroyed will run the closeModal() operation which will remove them from the mini game area 
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
-      onPlayersChange: (newPlayers: string[]) => {
+        onPlayersChange: (newPlayers: string[]) => {
         setPlayersByID(newPlayers);
       },
       onMinigameAreaDestroyed: () => {

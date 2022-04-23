@@ -14,6 +14,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import './App.css';
 import ConversationArea, { ServerConversationArea } from './classes/ConversationArea';
+import TicTacToeLeaderBoard from './classes/Leaderboard';
 import MinigameArea, { ServerMinigameArea } from './classes/MinigameArea';
 import Player, { ServerPlayer, UserLocation } from './classes/Player';
 import TownsServiceClient, { TownJoinResponse } from './classes/TownsServiceClient';
@@ -31,12 +32,14 @@ import VideoOverlay from './components/VideoCall/VideoOverlay/VideoOverlay';
 import WorldMap from './components/world/WorldMap';
 import ConversationAreasContext from './contexts/ConversationAreasContext';
 import CoveyAppContext from './contexts/CoveyAppContext';
+import LeaderboardContext from './contexts/LeaderboardContext';
 import MinigameAreasContext from './contexts/MinigameAreasContext';
 import NearbyPlayersContext from './contexts/NearbyPlayersContext';
 import PlayerMovementContext, { PlayerMovementCallback } from './contexts/PlayerMovementContext';
 import PlayersInTownContext from './contexts/PlayersInTownContext';
 import VideoContext from './contexts/VideoContext';
 import { CoveyAppState } from './CoveyTypes';
+import useLeaderboard from './hooks/useLeaderboard';
 
 export const MOVEMENT_UPDATE_DELAY_MS = 0;
 export const CALCULATE_NEARBY_PLAYERS_MOVING_DELAY_MS = 300;
@@ -133,6 +136,7 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
   // const [currentLocation, setCurrentLocation] = useState<UserLocation>({moving: false, rotation: 'front', x: 0, y: 0});
   const [conversationAreas, setConversationAreas] = useState<ConversationArea[]>([]);
   const [minigameAreas, setMinigameAreas] = useState<MinigameArea[]>([]);
+  // const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(new TicTacToeLeaderBoard({}));
 
   const setupGameController = useCallback(
     async (initData: TownJoinResponse) => {
@@ -329,7 +333,9 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
               <NearbyPlayersContext.Provider value={nearbyPlayers}>
                 <ConversationAreasContext.Provider value={conversationAreas}>
                   <MinigameAreasContext.Provider value={minigameAreas}>
-                    {page}
+                    {/* <LeaderboardContext.Provider value={leaderboard}> */}
+                      {page}
+                    {/* </LeaderboardContext.Provider> */}
                   </MinigameAreasContext.Provider>
                 </ConversationAreasContext.Provider>
               </NearbyPlayersContext.Provider>

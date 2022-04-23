@@ -28,19 +28,19 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.to(minigameLabel).emit('on_game_update', gameMatrix);
   });
 
-  // socket.on("update_game", ({ matrix, roomId }) => {
-  //   console.log(`play at ${matrix} to ${roomId}`);
-  //   socket.broadcast.to(roomId).emit("updateGame", matrix);
-  // });
+  // Kim Leaderboard
+  socket.on('update_leaderboard', async (minigameLabel: string, playerID: string) => {
+    socket.to(minigameLabel).emit('on_update_leaderboard', playerID);
+    console.log('update leaderboard in MinigameRequestHandler');
+    socket.emit('on_update_leaderboard', playerID);
+  });
 
   socket.on('game_over', async (message: string, minigameLabel: string) => {
-    if (message == "You Lost!") {
-      socket.emit('on_game_over', "Congrats You Won!");
+    if (message === 'You Lost!') {
+      socket.emit('on_game_over', 'Congrats You Won!');
     } else {
       socket.emit('on_game_over', message);
     }
     socket.to(minigameLabel).emit('on_game_over', message);
   });
-
-
 }
