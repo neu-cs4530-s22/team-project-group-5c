@@ -115,6 +115,7 @@ export async function townJoinHandler(requestData: TownJoinRequest): Promise<Res
   const newPlayer = new Player(requestData.userName);
   const newSession = await coveyTownController.addPlayer(newPlayer);
   assert(newSession.videoToken);
+  console.log(coveyTownController.minigameAreas);
   return {
     isOK: true,
     response: {
