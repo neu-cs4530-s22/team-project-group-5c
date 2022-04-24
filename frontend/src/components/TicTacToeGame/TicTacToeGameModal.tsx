@@ -1,13 +1,10 @@
-import styled from "styled-components";
 import React, { useCallback, useEffect, useState } from 'react';
 import { GameBoardMatrix } from './TicTacToeTypes';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import MinigameService from '../../classes/MinigameService';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
-import GameOverModal from '../world/GameOverModal'
-import GridModal from './GridModal'
-import TicTacToeLeaderBoard from '../../classes/Leaderboard';
-import useLeaderboard from '../../hooks/useLeaderboard';
+import GameOverModal from '../world/GameOverModal';
+import GridModal from './GridModal';
 
 
 
@@ -40,7 +37,6 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
    * Initializes listeners for the minigame area
    */
   const curPlayer = playerSymbol === 'x' ? minigameArea.playersByID[0] : minigameArea.playersByID[1];
-  // const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(useLeaderboard());
   
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
@@ -164,19 +160,6 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   }, [socket]);
 
   /**
-   * Call back function to handle the leaderboard
-   */
-  // const handleLeaderBoard = useCallback(() => {
-  //   if (socket) {
-  //     MinigameService.onUpdateLeaderBoard(socket, (playerID: string) => {
-  //       leaderboard.addScore(playerID);
-  //       const updatedLeaderboard = new TicTacToeLeaderBoard(leaderboard.scores);
-  //       setLeaderboard(updatedLeaderboard);        
-  //     })
-  //   }
-  // }, [socket, leaderboard])
-
-  /**
    * Call back function to restart the tic tac toe
    */
   const restart = useCallback(() => {
@@ -193,6 +176,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [playerSymbolStart, playerTurnStart, socket])
 
+  /**
+   * Handler for when a game is restarted 
+   */
   const handleGameRestarted = useCallback(() => {
     if (socket) {
       MinigameService.onRestartgame(socket, roomLabel, () => {
@@ -205,9 +191,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   useEffect(() => {
     handleGameUpdate();
     handleGameOver();
-    // handleLeaderBoard();
     handleGameRestarted();
-    // return () => { socket?.off('on_update_leaderboard'); }
   }, [handleGameUpdate, handleGameOver, socket, handleGameRestarted])
 
   

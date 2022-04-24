@@ -148,9 +148,9 @@ export default function GridModal({playerTurn, matrix, playerSymbol, closeModal,
         <GameContainer>
           {(!playerTurn) && <PlayStopper />}
           {matrix.map((row, rowIdx) => (
-              <RowContainer key={`row-container ${rowIdx}`}>
+              <RowContainer key={`row-container ${1 * rowIdx}`}>
                 {row.map((column, columnIdx) => (
-                  <ActiveOrInactiveCell key={`cell ${columnIdx}`} rowIdx={rowIdx} columnIdx={columnIdx} column={column}/>
+                  <ActiveOrInactiveCell key={`cell ${(3 * rowIdx) + columnIdx}`} rowIdx={rowIdx} columnIdx={columnIdx} column={column}/>
                 ))}
               </RowContainer>
             ))}

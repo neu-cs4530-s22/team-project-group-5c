@@ -20,6 +20,11 @@ export default class MinigameService {
     });
   }
 
+  /**
+   * Emits a leave minigame room message
+   * @param socket Socket.io client
+   * @param minigameLabel unique minigame label
+   */
   public static async leaveMinigameRoom(socket: Socket, minigameLabel: string) {
     socket.emit('leave_game_room', minigameLabel);
   }
@@ -38,6 +43,11 @@ export default class MinigameService {
     });
   }
 
+  /**
+   * Emits a restart game message
+   * @param socket Socket.io client
+   * @param minigameLabel unique minigame label
+   */
   public static restartMinigame(socket: Socket, minigameLabel: string): void {
     socket.emit('restart_game', minigameLabel);
   }
@@ -99,18 +109,14 @@ export default class MinigameService {
     });
   }
 
-  // Leaderboard 
+  /**
+   * Emits an update leaderboard message
+   * @param socket Socket.io client
+   * @param playerID ID of player who won
+   */
   public static updateLeaderBoard(socket: Socket, playerID: string) {
     socket.emit('update_leaderboard', playerID);
   }
 
-  // public static onUpdateLeaderBoard(
-  //   socket: Socket, 
-  //   leaderboardListener: (playerID: string) => void 
-  // ) {
-  //   socket.on('on_update_leaderboard', (playerID: string) => {
-  //     leaderboardListener(playerID)
-  //   });
-  // }
 }
 

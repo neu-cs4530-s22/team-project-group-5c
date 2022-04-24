@@ -25,6 +25,7 @@ export default function minigameSubscriptionHandler(socket: Socket, townControll
     socket.to(minigameLabel).emit(`${minigameLabel}_game_started`, { start: false, symbol: 'o' });
   });
 
+  // When a restart game message is received, both players in the room will know that their game is restarted 
   socket.on('restart_game', async (minigameLabel: string) => {
     socket.emit(`${minigameLabel}_game_restarted`);
     socket.to(minigameLabel).emit(`${minigameLabel}_game_restarted`);
@@ -45,11 +46,7 @@ export default function minigameSubscriptionHandler(socket: Socket, townControll
     socket.to(minigameLabel).emit('on_game_over', message);
   });
 
-  // socket.on('update_leaderboard', async (minigameLabel: string, playerID: string) => {
-  //   socket.emit('on_update_leaderboard', playerID);
-  //   socket.to(minigameLabel).emit('on_update_leaderboard', playerID);
-  // });
-
+  // When an update leaderboard message is received, the leaderboard is updated with the winner's ID
   socket.on('update_leaderboard', async (playerID: string) => {
     townController.updateLeaderboard(playerID);
   });

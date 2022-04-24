@@ -1,25 +1,17 @@
-export default class TicTacToeLeaderBoard {
-    // The number of wins by username
-    private _scores: { [username: string]: number; } = {};
+// Tic Tac Toe leaderboard type 
+export type TicTacToeLeaderBoard = { [username: string]: number; }
 
-    constructor(scores: { [username: string]: number; }) {
-        this._scores = scores;
-    }
-
+// Class with static function used to retrieve top 10 scores from a leaderboard
+export default class Leaderboard {
+    
     /**
-     * Get the scores in the leaderboard
+     * Static function used to get top 10 scores from leaderboard
+     * @param scores 
+     * @returns 
      */
-    get scores(): { [username: string]: number; } {
-        return this._scores;
-    }
-
-    /**
-     * Get the top 10 scores on the leaderboard
-     */
-    top10(): { [username: string]: number; } {
-        // Create the array of key-value pairs
+    public static getTop10(scores: TicTacToeLeaderBoard): { [username: string]: number; } {
         const items = [];
-        for (const entry of Object.entries(this._scores)) {
+        for (const entry of Object.entries(scores)) {
             items.push(entry);
         }
         // Sort the array based on the second element (i.e. the value)
@@ -41,18 +33,5 @@ export default class TicTacToeLeaderBoard {
             }
         }
         return top10;
-    }
-
-    /**
-     * Adds a users win to the scoreboard
-     * @param username the user who won
-     */
-    addScore(username: string): void {
-        if (username in this._scores) {
-            this._scores[username] += 1;
-        }
-        else {
-            this._scores[username] = 1;
-        }
     }
 }

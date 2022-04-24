@@ -1,6 +1,6 @@
 import React from 'react';
-import TicTacToeLeaderBoard from '../classes/Leaderboard';
+import { TicTacToeLeaderBoard } from '../classes/Leaderboard';
 
-const Context = React.createContext<TicTacToeLeaderBoard>(new TicTacToeLeaderBoard({}));
+const Context = React.createContext<TicTacToeLeaderBoard>({});
 
 export default Context;
