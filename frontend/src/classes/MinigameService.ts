@@ -34,7 +34,7 @@ export default class MinigameService {
   public static async startMinigame(socket: Socket, minigameLabel: string): Promise<boolean> {
     return new Promise((rs, rj) => {
       socket.emit("start_game", minigameLabel);
-      socket.on('host_start_game', ()=>rs(true));
+      socket.on('host_start_game', () => rs(true));
     });
   }
 
@@ -89,6 +89,20 @@ export default class MinigameService {
   public static onGameOver(socket: Socket, gameOverListener: (message: string) => void) {
     socket.on("on_game_over", ( message: string) => {
       gameOverListener(message);
+    });
+  }
+
+  // Leaderboard 
+  public static updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
+    socket.emit('update_leaderboard', minigameLabel, playerID);
+  }
+
+  public static onUpdateLeaderBoard(
+    socket: Socket, 
+    leaderboardListener: (playerID: string) => void 
+  ) {
+    socket.on('on_update_leaderboard', (playerID: string) => {
+      leaderboardListener(playerID)
     });
   }
 }

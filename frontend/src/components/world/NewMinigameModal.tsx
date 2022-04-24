@@ -49,7 +49,7 @@ function NewMinigameWaiting({myRef, minigameArea, myPlayerID, closeModal, setGam
   // onMinigameAreaDestroyed will run the closeModal() operation which will remove them from the mini game area 
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
-      onPlayersChange: (newPlayers: string[]) => {
+        onPlayersChange: (newPlayers: string[]) => {
         setPlayersByID(newPlayers);
       },
       onMinigameAreaDestroyed: () => {
@@ -87,11 +87,9 @@ function NewMinigameWaiting({myRef, minigameArea, myPlayerID, closeModal, setGam
       const gameStarted = await MinigameService.startMinigame(socket, minigameArea.label);
       if (gameStarted) {
         setGameStarted(true);
-
       }
     }
-  }
-  
+  }  
 
   return (
     <><ModalHeader>Start a new game at: {minigameArea.label} </ModalHeader>

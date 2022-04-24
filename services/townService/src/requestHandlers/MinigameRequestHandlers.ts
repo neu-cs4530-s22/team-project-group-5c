@@ -9,7 +9,6 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
   // This will emit a message to the player that they have joined the game room
   socket.on('join_game_room', async (minigameLabel: string) => {
     await socket.join(minigameLabel);
-    // console.log('in join_game label: ', minigameLabel);
     socket.emit(`${minigameLabel}_room_joined`);
   });
 
@@ -39,5 +38,8 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.to(minigameLabel).emit('on_game_over', message);
   });
 
-
+  socket.on('update_leaderboard', async (minigameLabel: string, playerID: string) => {
+    socket.emit('on_update_leaderboard', playerID);
+    socket.to(minigameLabel).emit('on_update_leaderboard', playerID);
+  });
 }

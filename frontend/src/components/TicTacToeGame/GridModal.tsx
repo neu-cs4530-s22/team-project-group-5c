@@ -1,8 +1,8 @@
-/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
 import styled from "styled-components";
 import { GameBoardMatrix } from './TicTacToeTypes';
+
 
 const GameContainer = styled.div`
   display: flex;
