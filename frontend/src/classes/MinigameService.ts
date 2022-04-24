@@ -45,33 +45,6 @@ export default class MinigameService {
     socket.on(`${minigameLabel}_game_started`, startGameListener);
   }
 
-
-  // public static async joinGameRoom(socket: Socket, roomId: string): Promise<boolean> {
-  //   return new Promise((rs, rj) => {
-  //     socket.emit("join_game", { roomId });
-  //     socket.on("room_joined", () => rs(true));
-  //     socket.on("room_join_error", (error: any) => rj(error));
-  //   });
-  // }
-
-  // public async updateGame(socket: Socket, gameMatrix: PlayMatrix) {
-  //   socket.emit("update_game", { matrix: gameMatrix });
-  // }
-
-  // public async onGameUpdate(
-  //   socket: Socket,
-  //   listiner: (matrix: IPlayMatrix) => void
-  // ) {
-  //   socket.on("on_game_update", ( matrix: any) => listiner(matrix));
-  // }
-
-  // public async onStartGame(
-  //   socket: Socket,
-  //   listiner: (options: IStartGame) => void
-  // ) {
-  //   socket.on("start_game", listiner);
-  // }
-
   public static async updateGame(socket: Socket, minigameLabel: string, gameMatrix: PlayMatrix) {
     socket.emit("update_game", gameMatrix, minigameLabel);
   }
@@ -83,9 +56,8 @@ export default class MinigameService {
     socket.on("on_game_update", (matrix: PlayMatrix) => updateGameListener(matrix));
   }
 
-  // Kim Leaderboard 
+  // Leaderboard 
   public static updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
-    console.log('updateLeaderBoard in MinigameService');
     socket.emit('update_leaderboard', minigameLabel, playerID);
   }
 
@@ -96,7 +68,6 @@ export default class MinigameService {
     socket.on('on_update_leaderboard', (playerID: string) => {
       leaderboardListener(playerID)
     });
-    console.log('onUpdateLeaderBaord in MinigameService');
   }
 
   public static async gameOver(socket: Socket, minigameLabel: string, message: string) {

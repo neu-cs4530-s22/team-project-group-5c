@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-import { Button, Modal, ModalOverlay, ModalContent, ModalBody, ModalCloseButton, ModalFooter, ModalHeader, Grid } from '@chakra-ui/react';
 import styled from "styled-components";
 import React, { useCallback, useEffect, useState } from 'react';
 import { PlayMatrix } from './TicTacToeTypes';
@@ -113,6 +111,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     };
   }, [minigameArea, closeModal]);
 
+  /**
+   * Call back function to check the game state by every changes in symbol
+   */
   const checkGameState = useCallback((gameMatrix: PlayMatrix) => {
     for (let i = 0; i < gameMatrix.length; i += 1) {
       const row = [];
@@ -160,6 +161,13 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     return [false, false];
   }, [playerSymbol]);
 
+  /**
+   * Update the game matrix dynamically
+   * 
+   * @param column the colum number of the matrix
+   * @param row    the row number of the matrix
+   * @param symbol symbol of player tic tac toe 
+   */
   const updateGameMatrix = async (column: number, row: number, symbol: "x" | "o") => {
     const newMatrix = [...matrix];
 
@@ -175,7 +183,6 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
       if (currentPlayerWon && otherPlayerWon) {
         await MinigameService.gameOver(socket, roomLabel, "The Game is a TIE!");
       } else if (currentPlayerWon && !otherPlayerWon) {
-        console.log("here")
         await MinigameService.gameOver(socket, roomLabel, "You Lost!");
         MinigameService.updateLeaderBoard(socket, roomLabel, curPlayer);
       }
@@ -183,6 +190,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   };
 
+  /**
+   * Call back function to handle the game update
+   */
   const handleGameUpdate = useCallback(() => {
     if (socket) {
       MinigameService.onGameUpdate(socket, (newMatrix: PlayMatrix) => {
@@ -193,6 +203,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [checkGameState, socket]);
 
+  /**
+   * Call back funtion to handle the game over
+   */
   const handleGameOver = useCallback(() => {
     if (socket) {
       MinigameService.onGameOver(socket, (message: string) => {
@@ -203,6 +216,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [socket]);
 
+  /**
+   * Call back function to handle the leaderboard
+   */
   const handleLeaderBoard = useCallback(() => {
     if (socket) {
       MinigameService.onUpdateLeaderBoard(socket, (playerID: string) => {
@@ -213,7 +229,25 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [socket, leaderboard])
 
-  const gameoverModal = <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal} minigameLabel={minigameArea.label} leaderboard={leaderboard}/>
+  /**
+   * Call back function to restart the tic tac toe
+   */
+  const restart = useCallback(() => {
+    if (socket) {
+      setMatrix([
+        [null, null, null],
+        [null, null, null],
+        [null, null, null],
+      ]);
+      setPlayerSymbol(playerSymbolStart);
+      setPlayerTurn(playerTurnStart);
+      setGameOver(false);
+      setGameOverMessage('You Lost!');
+      MinigameService.joinMinigameRoom(socket, roomLabel);
+      MinigameService.startMinigame(socket, roomLabel);
+    }
+  }, [playerSymbolStart, playerTurnStart, roomLabel, socket])
+
 
   useEffect(() => {
     handleGameUpdate();
@@ -222,10 +256,11 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     return () => { socket?.off('on_update_leaderboard'); }
   }, [handleGameUpdate, handleGameOver, handleLeaderBoard, socket])
 
+  
   return (
     <> 
       {!gameOver && <GridModal playerTurn={playerTurn} matrix={matrix} playerSymbol={playerSymbol} closeModal={closeModal} updateGameMatrix={updateGameMatrix}/>}
-      {gameOver && <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal} minigameLabel={minigameArea.label} leaderboard={leaderboard}/>}
+      {gameOver && <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal} leaderboard={leaderboard} restart={restart}/>}
     </>
   )
 }
