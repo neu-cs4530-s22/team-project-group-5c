@@ -23,7 +23,6 @@ export default function addTownRoutes(http: Server, app: Express): io.Server {
         userName: req.body.userName,
         coveyTownID: req.body.coveyTownID,
       });
-      console.log(result);
       res.status(StatusCodes.OK)
         .json(result);
     } catch (err) {

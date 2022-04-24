@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader } from '@chakra-ui/react';
+import { Button, ModalBody, ModalCloseButton, ModalFooter, ModalHeader, Text } from '@chakra-ui/react';
 import styled from "styled-components";
 import { GameBoardMatrix } from './TicTacToeTypes';
 
@@ -144,7 +144,8 @@ export default function GridModal({playerTurn, matrix, playerSymbol, closeModal,
     <> 
     <ModalHeader>Minigame </ModalHeader>
       <ModalBody>
-        {playerTurn? 'Your Turn!' : 'Opponent\'s turn'}
+        <Text fontSize='lg'>{playerSymbol === 'x'? 'You are player X' : 'You are player O'}</Text>
+        <Text fontSize='sm' as='i'>{playerTurn? 'Your Turn!' : 'Opponent\'s turn'}</Text>
         <GameContainer>
           {(!playerTurn) && <PlayStopper />}
           {matrix.map((row, rowIdx) => (

@@ -10,28 +10,13 @@ export default class Leaderboard {
      * @returns 
      */
     public static getTop10(scores: TicTacToeLeaderBoard): { [username: string]: number; } {
-        const items = [];
-        for (const entry of Object.entries(scores)) {
-            items.push(entry);
-        }
+        const items = Object.entries(scores);
         // Sort the array based on the second element (i.e. the value)
         items.sort((first, second) => (second[1] - first[1]));
-
-        // Get the top 10 records
-        const top10: { [username: string]: number; } = {};
-
-        // if there is item more than 10, pick top most 10
-        if (items.length >= 10) {
-            for (let i = 0; i < 10; i += 1) {
-                // eslint-disable-next-line prefer-destructuring
-                top10[items[i][0]] = items[i][1];
-            }
-        } else {
-            for (let i = 0; i < items.length; i += 1) {
-                // eslint-disable-next-line prefer-destructuring
-                top10[items[i][0]] = items[i][1];
-            }
-        }
-        return top10;
+        // Get top 10 items from list
+        const top10List = items.slice(0, 10);
+        // Convert top 10 to dictionary
+        const top10Dict = Object.fromEntries(top10List);
+        return top10Dict;
     }
 }

@@ -4,9 +4,10 @@ import {
     ModalCloseButton,
     ModalFooter,
     ModalHeader,
-    OrderedList,
     ListItem,
-    } from '@chakra-ui/react';
+    Text,
+    UnorderedList,
+  } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import Leaderboard from '../../classes/Leaderboard';
 import usePlayersInTown from '../../hooks/usePlayersInTown';
@@ -49,17 +50,35 @@ export default function GameOverModal({minigameArea, closeModal, gameOverMessage
 
   const top10 = Leaderboard.getTop10(leaderboard);
 
-  const scoreItem = Object.keys(top10).map(key => 
-    (<ListItem key={key}>{players.find(player => player.id === key)?.userName || null} {top10[key]}</ListItem>))
+  function Top10List() : JSX.Element {
+    const scoreItem = Object.keys(top10).map((key: string) => {
+      const player = players.find(p => p.id === key);
+      if (player) {
+        return (
+          <ListItem key={key}>
+            <Text fontSize='lg'>{player.userName || null} : {top10[key]}</Text>
+          </ListItem>
+        )
+      }
+      return <></>
+    });
+
+    return (
+      <UnorderedList>
+          {scoreItem}
+      </UnorderedList>
+    )
+  }
+
+  // const scoreItem = Object.keys(top10).map(key => 
+  //   (<ListItem key={key}>{players.find(player => player.id === key)?.userName || null} {top10[key]}</ListItem>))
 
   return (
     <>
       <ModalHeader> Game Over: {gameOverMessage} </ModalHeader>
       <ModalBody>
-        Leaderboard
-        <OrderedList>
-          {scoreItem}
-        </OrderedList>
+        <Text fontSize='xl'>Leaderboard</Text>
+        <Top10List />
       </ModalBody><ModalCloseButton /><ModalFooter>
       <Button onClick={restartGame} hidden={isRestartButtonHidden} colorScheme='purple' mr={3}>Start New Game</Button>
       <Button onClick={closeModal}>Close</Button>
