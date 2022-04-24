@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import { AddressInfo } from 'net';
 import addTownRoutes from '../router/towns';
 import TownsServiceClient, { TownListResponse } from './TownsServiceClient';
+import { createMiniGameForTesting } from './TestUtils';
 
 type TestTownData = {
   friendlyName: string;
@@ -231,5 +232,22 @@ describe('TownsServiceAPIREST', () => {
       expect(res2.coveySessionToken).toBeDefined();
       expect(res2.coveyUserID).toBeDefined();
     });
+  });
+
+  describe('Custom: minigameCreateAPI', () => {
+    it('Allows for multiple minigames with the same minigame name', async () => {
+      const firstMinigame = await createMiniGameForTesting();
+      const secondMinigame = await createMiniGameForTesting({ minigame: firstMinigame.minigame });
+      expect(firstMinigame.label).not.toBe(secondMinigame.label);
+    });
+    // TODO: Not sure this test need or not
+    // it('Prohibits a blank label', async () => {
+    //   try {
+    //     await createMiniGameForTesting({ minigameLabel: '' });
+    //     fail('createMiniGame should throw an error if label is empty string');
+    //   } catch (err) {
+    //     // OK
+    //   }
+    // });
   });
 });
