@@ -5,6 +5,7 @@ import { ChatMessage, CoveyTownList, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
 import CoveyTownsStore from '../lib/CoveyTownsStore';
 import { ConversationAreaCreateRequest, MinigameAreaCreateRequest, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
+import minigameSubscriptionHandler from './MinigameRequestHandlers';
 
 /**
  * The format of a request to join a Town in Covey.Town, as dispatched by the server middleware
@@ -114,6 +115,7 @@ export async function townJoinHandler(requestData: TownJoinRequest): Promise<Res
   const newPlayer = new Player(requestData.userName);
   const newSession = await coveyTownController.addPlayer(newPlayer);
   assert(newSession.videoToken);
+  console.log(coveyTownController.minigameAreas);
   return {
     isOK: true,
     response: {
@@ -306,4 +308,8 @@ export function townSubscriptionHandler(socket: Socket): void {
   socket.on('playerMovement', (movementData: UserLocation) => {
     townController.updatePlayerLocation(s.player, movementData);
   });
+
+  // Register minigame listeners on the socket
+  minigameSubscriptionHandler(socket);
+
 }
