@@ -136,6 +136,7 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
 
   const setupGameController = useCallback(
     async (initData: TownJoinResponse) => {
+      console.log(initData);
       const gamePlayerID = initData.coveyUserID;
       const sessionToken = initData.coveySessionToken;
       const url = process.env.REACT_APP_TOWNS_SERVICE_URL;
