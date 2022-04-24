@@ -1,5 +1,6 @@
 import { ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 import { ChatMessage } from '../CoveyTypes';
+import TicTacToeLeaderBoard from './Leaderboard';
 import Player from './Player';
 
 /**
@@ -59,4 +60,6 @@ export default interface CoveyTownListener {
    * @param message the new chat message
    */
   onChatMessage(message: ChatMessage): void;
+
+  onLeaderboardUpdated(updatedLeaderboard: TicTacToeLeaderBoard): void;
 }

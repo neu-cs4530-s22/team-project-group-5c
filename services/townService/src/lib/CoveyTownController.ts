@@ -2,6 +2,7 @@ import { customAlphabet, nanoid } from 'nanoid';
 import { BoundingBox, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 import { ChatMessage, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
+import TicTacToeLeaderBoard from '../types/Leaderboard';
 import Player from '../types/Player';
 import PlayerSession from '../types/PlayerSession';
 import IVideoClient from './IVideoClient';
@@ -58,6 +59,10 @@ export default class CoveyTownController {
     return this._minigameAreas;
   }
 
+  get ticTacToeLeaderboard(): TicTacToeLeaderBoard {
+    return this._ticTacToeLeaderBoard;
+  }
+
   /** The list of players currently in the town * */
   private _players: Player[] = [];
 
@@ -85,6 +90,8 @@ export default class CoveyTownController {
   private _isPubliclyListed: boolean;
 
   private _capacity: number;
+
+  private _ticTacToeLeaderBoard: TicTacToeLeaderBoard = new TicTacToeLeaderBoard({});
 
   constructor(friendlyName: string, isPubliclyListed: boolean) {
     this._coveyTownID = process.env.DEMO_TOWN_ID === friendlyName ? friendlyName : friendlyNanoID();
@@ -116,6 +123,11 @@ export default class CoveyTownController {
     this._listeners.forEach(listener => listener.onPlayerJoined(newPlayer));
 
     return theSession;
+  }
+
+  updateLeaderboard(winner: string): void {
+    this.ticTacToeLeaderboard.addScore(winner);
+    this._listeners.forEach(listener => listener.onLeaderboardUpdated(this.ticTacToeLeaderboard));
   }
 
   /**

@@ -16,7 +16,7 @@ export default class TicTacToeLeaderBoard {
     /**
      * Get the top 10 scores on the leaderboard
      */
-    public get top10(): { [username: string]: number; } {
+    top10(): { [username: string]: number; } {
         // Create the array of key-value pairs
         const items = [];
         for (const entry of Object.entries(this._scores)) {

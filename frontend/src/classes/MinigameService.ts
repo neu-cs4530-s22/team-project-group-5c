@@ -38,6 +38,10 @@ export default class MinigameService {
     });
   }
 
+  public static restartMinigame(socket: Socket, minigameLabel: string): void {
+    socket.emit('restart_game', minigameLabel);
+  }
+
   /**
    * Initializes socket listener waiting for game started
    * @param socket Socket.io client
@@ -48,6 +52,9 @@ export default class MinigameService {
     socket.on(`${minigameLabel}_game_started`, startGameListener);
   }
 
+  public static onRestartgame(socket: Socket, minigameLabel: string, restartGameListener: () => void): void {
+    socket.on(`${minigameLabel}_game_restarted`, restartGameListener);
+  }
 
   /**
    * Emits a socket message to update the game matrix
@@ -93,17 +100,17 @@ export default class MinigameService {
   }
 
   // Leaderboard 
-  public static updateLeaderBoard(socket: Socket, minigameLabel: string, playerID: string) {
-    socket.emit('update_leaderboard', minigameLabel, playerID);
+  public static updateLeaderBoard(socket: Socket, playerID: string) {
+    socket.emit('update_leaderboard', playerID);
   }
 
-  public static onUpdateLeaderBoard(
-    socket: Socket, 
-    leaderboardListener: (playerID: string) => void 
-  ) {
-    socket.on('on_update_leaderboard', (playerID: string) => {
-      leaderboardListener(playerID)
-    });
-  }
+  // public static onUpdateLeaderBoard(
+  //   socket: Socket, 
+  //   leaderboardListener: (playerID: string) => void 
+  // ) {
+  //   socket.on('on_update_leaderboard', (playerID: string) => {
+  //     leaderboardListener(playerID)
+  //   });
+  // }
 }
 

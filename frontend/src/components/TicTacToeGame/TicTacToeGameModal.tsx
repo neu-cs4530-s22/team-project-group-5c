@@ -40,7 +40,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
    * Initializes listeners for the minigame area
    */
   const curPlayer = playerSymbol === 'x' ? minigameArea.playersByID[0] : minigameArea.playersByID[1];
-  const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(useLeaderboard());
+  // const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(useLeaderboard());
   
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
@@ -131,7 +131,7 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
         await MinigameService.gameOver(socket, roomLabel, "The Game is a TIE!");
       } else if (currentPlayerWon && !otherPlayerWon) {
         await MinigameService.gameOver(socket, roomLabel, "You Lost!");
-        MinigameService.updateLeaderBoard(socket, roomLabel, curPlayer);
+        MinigameService.updateLeaderBoard(socket, curPlayer);
       }
       setPlayerTurn(false);
     }
@@ -166,15 +166,15 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   /**
    * Call back function to handle the leaderboard
    */
-  const handleLeaderBoard = useCallback(() => {
-    if (socket) {
-      MinigameService.onUpdateLeaderBoard(socket, (playerID: string) => {
-        leaderboard.addScore(playerID);
-        const updatedLeaderboard = new TicTacToeLeaderBoard(leaderboard.scores);
-        setLeaderboard(updatedLeaderboard);        
-      })
-    }
-  }, [socket, leaderboard])
+  // const handleLeaderBoard = useCallback(() => {
+  //   if (socket) {
+  //     MinigameService.onUpdateLeaderBoard(socket, (playerID: string) => {
+  //       leaderboard.addScore(playerID);
+  //       const updatedLeaderboard = new TicTacToeLeaderBoard(leaderboard.scores);
+  //       setLeaderboard(updatedLeaderboard);        
+  //     })
+  //   }
+  // }, [socket, leaderboard])
 
   /**
    * Call back function to restart the tic tac toe
@@ -190,24 +190,31 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
       setPlayerTurn(playerTurnStart);
       setGameOver(false);
       setGameOverMessage('You Lost!');
-      MinigameService.joinMinigameRoom(socket, roomLabel);
-      MinigameService.startMinigame(socket, roomLabel);
     }
-  }, [playerSymbolStart, playerTurnStart, roomLabel, socket])
+  }, [playerSymbolStart, playerTurnStart, socket])
+
+  const handleGameRestarted = useCallback(() => {
+    if (socket) {
+      MinigameService.onRestartgame(socket, roomLabel, () => {
+        restart();
+      })
+    }
+  }, [restart, roomLabel, socket]);
 
 
   useEffect(() => {
     handleGameUpdate();
     handleGameOver();
-    handleLeaderBoard();
-    return () => { socket?.off('on_update_leaderboard'); }
-  }, [handleGameUpdate, handleGameOver, handleLeaderBoard, socket])
+    // handleLeaderBoard();
+    handleGameRestarted();
+    // return () => { socket?.off('on_update_leaderboard'); }
+  }, [handleGameUpdate, handleGameOver, socket, handleGameRestarted])
 
   
   return (
     <> 
       {!gameOver && <GridModal playerTurn={playerTurn} matrix={matrix} playerSymbol={playerSymbol} closeModal={closeModal} updateGameMatrix={updateGameMatrix}/>}
-      {gameOver && <GameOverModal gameOverMessage={gameOverMessage} closeModal={closeModal} leaderboard={leaderboard} restart={restart}/>}
+      {gameOver && <GameOverModal minigameArea={minigameArea} gameOverMessage={gameOverMessage} closeModal={closeModal}/>}
     </>
   )
 }

@@ -7,22 +7,35 @@ import {
     OrderedList,
     ListItem,
     } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TicTacToeLeaderBoard from '../../classes/Leaderboard';
 import usePlayersInTown from '../../hooks/usePlayersInTown';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
+import MinigameArea from '../../classes/MinigameArea';
+import MinigameService from '../../classes/MinigameService';
+import useLeaderboard from '../../hooks/useLeaderboard';
     
 type GameOverModalProps = {
-  leaderboard: TicTacToeLeaderBoard;
+  minigameArea: MinigameArea;
   closeModal: () => void;
   gameOverMessage: string;
-  restart: () => void;
 }
 
 /** 
  * Game Over modal component that opens when the game finished and see the players win or lose and leaderboard 
  */
-export default function GameOverModal({leaderboard, closeModal, gameOverMessage, restart} : GameOverModalProps): JSX.Element {
+export default function GameOverModal({minigameArea, closeModal, gameOverMessage} : GameOverModalProps): JSX.Element {
+  const [isRestartButtonHidden, setIsRestartButtonHidden] = useState<boolean>(true);
+  const {socket, myPlayerID } = useCoveyAppState();
+  const leaderboard = useLeaderboard();
+  console.log(leaderboard);
+
+  useEffect(() => {
+    // The server minigame has already been created 
+    if (minigameArea.playersByID && minigameArea.playersByID[0] === myPlayerID) { // Host
+      setIsRestartButtonHidden(false);
+    } 
+  }, [minigameArea.playersByID, myPlayerID]);
   
   /** 
    * Minigame modal component that opens when a new user starts playing a minigame. 
@@ -48,10 +61,20 @@ export default function GameOverModal({leaderboard, closeModal, gameOverMessage,
     //   }
     // }
 
+    const restartGame = async () => {
+      if (socket) {
+        MinigameService.restartMinigame(socket, minigameArea.label);
+        // restart();
+      }
+    }  
+
     const players = usePlayersInTown();
 
-    const scoreItem = Object.keys(leaderboard.top10).map(key => 
-      (<ListItem key={key}>{players.find(player => player.id === key)?.userName || null} {leaderboard.top10[key]}</ListItem>))
+    const top10 = leaderboard.top10();
+    console.log(top10);
+
+    const scoreItem = Object.keys(leaderboard.top10()).map(key => 
+      (<ListItem key={key}>{players.find(player => player.id === key)?.userName || null} {leaderboard.top10()[key]}</ListItem>))
 
 
 
@@ -64,7 +87,7 @@ export default function GameOverModal({leaderboard, closeModal, gameOverMessage,
             {scoreItem}
           </OrderedList>
         </ModalBody><ModalCloseButton /><ModalFooter>
-        <Button onClick={restart} colorScheme='purple' mr={3}>Start New Game</Button>
+        <Button onClick={restartGame} hidden={isRestartButtonHidden} colorScheme='purple' mr={3}>Start New Game</Button>
         <Button onClick={closeModal}>Close</Button>
       </ModalFooter></>
     );

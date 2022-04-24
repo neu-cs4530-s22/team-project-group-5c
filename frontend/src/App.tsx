@@ -136,7 +136,7 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
   // const [currentLocation, setCurrentLocation] = useState<UserLocation>({moving: false, rotation: 'front', x: 0, y: 0});
   const [conversationAreas, setConversationAreas] = useState<ConversationArea[]>([]);
   const [minigameAreas, setMinigameAreas] = useState<MinigameArea[]>([]);
-  // const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(new TicTacToeLeaderBoard({}));
+  const [leaderboard, setLeaderboard] = useState<TicTacToeLeaderBoard>(new TicTacToeLeaderBoard({}));
 
   const setupGameController = useCallback(
     async (initData: TownJoinResponse) => {
@@ -275,6 +275,11 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
         setMinigameAreas(localMinigameAreas);
         recalculateNearbyPlayers();
       });
+
+      socket.on('leaderboardUpdate', (_updatedLeaderboard: TicTacToeLeaderBoard) => {
+        setLeaderboard(_updatedLeaderboard);
+      });
+
       dispatchAppUpdate({
         action: 'doConnect',
         data: {
@@ -334,9 +339,9 @@ function App(props: { setOnDisconnect: Dispatch<SetStateAction<Callback | undefi
               <NearbyPlayersContext.Provider value={nearbyPlayers}>
                 <ConversationAreasContext.Provider value={conversationAreas}>
                   <MinigameAreasContext.Provider value={minigameAreas}>
-                    {/* <LeaderboardContext.Provider value={leaderboard}> */}
+                    <LeaderboardContext.Provider value={leaderboard}>
                       {page}
-                    {/* </LeaderboardContext.Provider> */}
+                    </LeaderboardContext.Provider>
                   </MinigameAreasContext.Provider>
                 </ConversationAreasContext.Provider>
               </NearbyPlayersContext.Provider>
