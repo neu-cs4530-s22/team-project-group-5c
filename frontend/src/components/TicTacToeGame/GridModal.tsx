@@ -89,7 +89,6 @@ type TicTacToeGameModalProps = {
 }
 
 export default function GridModal({playerTurn, matrix, playerSymbol, closeModal, updateGameMatrix}: TicTacToeGameModalProps): JSX.Element {
-// {gameOverMessage} 
   type ShowCellProps = {
     column: string | null;
   }

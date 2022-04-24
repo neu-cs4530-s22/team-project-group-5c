@@ -147,6 +147,10 @@ export default function NewMinigameModal( {isOpen, myPlayerID, closeModal, newMi
     handleGameStart();
   }, [handleGameStart])
 
+  /**
+   * Creates a ref of the child waiting room component so that the players list can be updated from parent component
+   * @param newPlayers new players list
+   */
   const changeChildPlayersList = (newPlayers: string[]|undefined) => {
     if (myRef.current) {
       myRef.current(newPlayers);

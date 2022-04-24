@@ -24,11 +24,12 @@ export default function minigameSubscriptionHandler(socket: Socket): void {
     socket.to(minigameLabel).emit(`${minigameLabel}_game_started`, { start: false, symbol: 'o' });
   });
 
+  // When the game board is updated by a player, it will send the message to the other player
   socket.on('update_game', async (gameMatrix: GameBoardMatrix, minigameLabel: string) => {
-    // socket.emit('on_game_update', gameMatrix);
     socket.to(minigameLabel).emit('on_game_update', gameMatrix);
   });
 
+  // When the game is over, it will send a win message to the player that won, and a lose message to the other player 
   socket.on('game_over', async (message: string, minigameLabel: string) => {
     if (message === 'You Lost!') {
       socket.emit('on_game_over', 'Congrats You Won!');

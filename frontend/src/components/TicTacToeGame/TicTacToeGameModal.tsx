@@ -32,6 +32,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [gameOverMessage, setGameOverMessage] = useState<string>('You Lost!');
 
+  /**
+   * Initializes listeners for the minigame area
+   */
   useEffect(() => {
     const updateListener: MinigameAreaListener = {
       onPlayersChange: (newPlayers: string[]) => {
@@ -48,6 +51,10 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     };
   }, [minigameArea, closeModal, setGameStarted, changeWaitingPlayers]);
 
+  /**
+   * Checks for the winner on each game board update 
+   * Outputs [hostWin, guestWin] as a boolean array
+   */
   const checkGameState = useCallback((gameMatrix: GameBoardMatrix) => {
     for (let i = 0; i < gameMatrix.length; i += 1) {
       const row = [];
@@ -95,6 +102,12 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     return [false, false];
   }, [playerSymbol]);
 
+  /**
+   * Updates the game board with the given column and row value
+   * @param column column of the input value
+   * @param row row of the input value
+   * @param symbol player's symbol
+   */
   const updateGameMatrix = async (column: number, row: number, symbol: "x" | "o") => {
     const newMatrix = [...matrix];
 
@@ -117,6 +130,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   };
 
+  /**
+   * Handler for game updates that initializes a listener for this player to update the game board
+   */
   const handleGameUpdate = useCallback(() => {
     if (socket) {
       MinigameService.onGameUpdate(socket, (newMatrix: GameBoardMatrix) => {
@@ -127,6 +143,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [checkGameState, socket]);
 
+  /**
+   * Handler for game win checks that initializes a listener for this player
+   */
   const handleGameOver = useCallback(() => {
     if (socket) {
       MinigameService.onGameOver(socket, (message: string) => {
@@ -137,6 +156,9 @@ export default function TicTacToeGameModal({minigameArea, closeModal, roomLabel,
     }
   }, [socket]);
 
+  /**
+   * Initializes handlers upon render 
+   */
   useEffect(() => {
     handleGameUpdate();
     handleGameOver();

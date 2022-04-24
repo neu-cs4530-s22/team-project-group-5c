@@ -49,22 +49,43 @@ export default class MinigameService {
   }
 
 
+  /**
+   * Emits a socket message to update the game matrix
+   * @param socket Socket.io client
+   * @param minigameLabel unique minigame label
+   * @param gameMatrix game board state
+   */
   public static async updateGame(socket: Socket, minigameLabel: string, gameMatrix: GameBoardMatrix) {
     socket.emit("update_game", gameMatrix, minigameLabel);
   }
 
+  /**
+   * Listens for a socket message to update the game board
+   * @param socket Socket.io client
+   * @param updateGameListener callback listener to update the game board state
+   */
   public static async onGameUpdate(
     socket: Socket,
     updateGameListener: (matrix: GameBoardMatrix) => void
   ) {
     socket.on("on_game_update", ( matrix: GameBoardMatrix) => updateGameListener(matrix));
-    
   }
 
+  /**
+   * Emits a game over message through the socket
+   * @param socket Socket.io client
+   * @param minigameLabel unique minigame label
+   * @param message Gameover message to send to other player
+   */
   public static async gameOver(socket: Socket, minigameLabel: string, message: string) {
     socket.emit("game_over", message, minigameLabel);
   }
 
+  /**
+   * Listens for a game over message
+   * @param socket Socket.io client
+   * @param gameOverListener callback listener to run when the game is over 
+   */
   public static onGameOver(socket: Socket, gameOverListener: (message: string) => void) {
     socket.on("on_game_over", ( message: string) => {
       gameOverListener(message);
