@@ -240,9 +240,8 @@ describe('CoveyTownController', () => {
         if (updateLeaderboardHandler && updateLeaderboardHandler[1]) {
           const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
           const playerID = 'Jack';
-          const scores = { 'Jack': 1 };
           try {
-            await updateLeaderboardHandler[1](newMinigameArea.label, playerID, scores);
+            await updateLeaderboardHandler[1](newMinigameArea.label, playerID);
           } catch (error) {
             expect(updateLeaderboardHandler[1]).not.toBe(undefined);
           }
