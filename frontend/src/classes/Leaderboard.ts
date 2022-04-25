@@ -1,52 +1,22 @@
-import { keyBy, values } from "lodash";
+// Tic Tac Toe leaderboard type 
+export type TicTacToeLeaderBoard = { [username: string]: number; }
 
-export default class TicTacToeLeaderBoard {
-
-    // The number of wins by username
-    private _scores: { [username: string]: number; } = {};
-
-    constructor(scores: { [username: string]: number; }) {
-        this._scores = scores;
-    }
-
+// Class with static function used to retrieve top 10 scores from a leaderboard
+export default class Leaderboard {
+    
     /**
-     * Get the scores in the leaderboard
+     * Static function used to get top 10 scores from leaderboard
+     * @param scores 
+     * @returns 
      */
-    get scores(): { [username: string]: number; } {
-        return this.scores;
-    }
-
-    /**
-     * Get the top 10 scores on the leaderboard
-     */
-    get top10(): { [username: string]: number; } {
-        // Create the array of key-value pairs
-        const items = [];
-        for (const entry of Object.entries(this._scores)) {
-            items.push(entry);
-        }
+    public static getTop10(scores: TicTacToeLeaderBoard): { [username: string]: number; } {
+        const items = Object.entries(scores);
         // Sort the array based on the second element (i.e. the value)
-        items.sort((first, second) => { return second[1] - first[1]});
-
-        // Get the top 10 records
-        const top10: { [username: string]: number; } = {};
-        for (let i = 0; i < 10; i++) {
-            top10[items[i][0]] = items[i][1];
-        }
-
-        return top10;
-    }
-
-    /**
-     * Adds a users win to the scoreboard
-     * @param username the user who won
-     */
-    addScore(username: string): void {
-        if (username in this._scores) {
-            this._scores[username] += 1;
-        }
-        else {
-            this._scores[username] = 1;
-        }
+        items.sort((first, second) => (second[1] - first[1]));
+        // Get top 10 items from list
+        const top10List = items.slice(0, 10);
+        // Convert top 10 to dictionary
+        const top10Dict = Object.fromEntries(top10List);
+        return top10Dict;
     }
 }

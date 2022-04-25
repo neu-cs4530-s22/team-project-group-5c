@@ -5,6 +5,8 @@ import { ChatMessage, CoveyTownList, UserLocation } from '../CoveyTypes';
 import CoveyTownListener from '../types/CoveyTownListener';
 import CoveyTownsStore from '../lib/CoveyTownsStore';
 import { ConversationAreaCreateRequest, MinigameAreaCreateRequest, ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
+import minigameSubscriptionHandler from './MinigameRequestHandlers';
+import { TicTacToeLeaderBoard } from '../types/Leaderboard';
 
 /**
  * The format of a request to join a Town in Covey.Town, as dispatched by the server middleware
@@ -262,6 +264,9 @@ function townSocketAdapter(socket: Socket): CoveyTownListener {
     onChatMessage(message: ChatMessage){
       socket.emit('chatMessage', message);
     },
+    onLeaderboardUpdated(updatedLeaderboard: TicTacToeLeaderBoard){
+      socket.emit('leaderboardUpdate', updatedLeaderboard);
+    },
   };
 }
 
@@ -306,4 +311,8 @@ export function townSubscriptionHandler(socket: Socket): void {
   socket.on('playerMovement', (movementData: UserLocation) => {
     townController.updatePlayerLocation(s.player, movementData);
   });
+
+  // Register minigame listeners on the socket
+  minigameSubscriptionHandler(socket, townController);
+
 }
