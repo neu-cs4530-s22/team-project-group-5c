@@ -10,7 +10,6 @@ import PlayerSession from '../types/PlayerSession';
 import { townSubscriptionHandler } from '../requestHandlers/CoveyTownRequestHandlers';
 import CoveyTownsStore from './CoveyTownsStore';
 import * as TestUtils from '../client/TestUtils';
-import minigameSubscriptionHandler from '../requestHandlers/MinigameRequestHandlers';
 
 const mockTwilioVideo = mockDeep<TwilioVideo>();
 jest.spyOn(TwilioVideo, 'getInstance').mockReturnValue(mockTwilioVideo);
@@ -183,7 +182,7 @@ describe('CoveyTownController', () => {
       });
       it('MinigameRequestHandlers join game room', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
-        minigameSubscriptionHandler(mockSocket);
+        townSubscriptionHandler(mockSocket);
         const joinGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'join_game_room');
 
         if (joinGameHandler && joinGameHandler[1]) {
@@ -195,7 +194,7 @@ describe('CoveyTownController', () => {
       });
       it('MinigameRequestHandlers start game', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
-        minigameSubscriptionHandler(mockSocket);
+        townSubscriptionHandler(mockSocket);
         const joinGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'join_game_room');
         const startGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'start_game');
 
@@ -213,7 +212,7 @@ describe('CoveyTownController', () => {
       });
       it('MinigameRequestHandlers update game', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
-        minigameSubscriptionHandler(mockSocket);
+        townSubscriptionHandler(mockSocket);
         const updateGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'update_game');
 
         if (updateGameHandler && updateGameHandler[1]) {
@@ -234,7 +233,7 @@ describe('CoveyTownController', () => {
       });
       it('MinigameRequestHandlers update leaderboard', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
-        minigameSubscriptionHandler(mockSocket);
+        townSubscriptionHandler(mockSocket);
         const updateLeaderboardHandler = mockSocket.on.mock.calls.find(call => call[0] === 'update_leaderboard');
 
         if (updateLeaderboardHandler && updateLeaderboardHandler[1]) {
@@ -251,7 +250,7 @@ describe('CoveyTownController', () => {
       });
       it('MinigameRequestHandlers game over', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
-        minigameSubscriptionHandler(mockSocket);
+        townSubscriptionHandler(mockSocket);
         const updateGameOver = mockSocket.on.mock.calls.find(call => call[0] === 'game_over');
 
         if (updateGameOver && updateGameOver[1]) {
