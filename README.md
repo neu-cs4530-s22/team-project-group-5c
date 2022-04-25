@@ -1,7 +1,14 @@
+# Covey.Town TicTacToe Minigame Version
+
+Covey.Town TicTacToe Minigame Version is an enhanced version of the original Covey.Town with the added TicTacToe Minigame feature. This feature that we have developed as a group is the introduction of minigames into CoveyTown. The concept that inspired our feature is to add some entertainment to CoveyTown so that users can not only talk to each other but also play games in the Town. We have made use of an arcade area in Covey.Town in order to implement our Minigame feature, where users can get together to play minigames. Our specific feature is a multiplayer TicTacToe game as well as a leaderboard for TicTacToe. We added two interactable gameAreas that function similarly to the existing conversationAreas but allow users to play a game of TicTacToe with others in the town.
+
+### Usage
+
+In order to be able to play Tic Tac Toe with another player, the user must first go into the Arcade in Covey.Town. This space can be found by first going as far South as possible and then as far East. Here there will be a "portal" embedded in the wall with two arrows indicating where to go. Once there, there will be two clearly labeled Minigame Areas where users can get together to play TicTacToe. The game will only start when two players join the Minigame Area. The first player who goes into the area will be prompted to start a new game by pressing space. The second player that walks into the Minigame Area will be able to join the game after also pressing space. The hostt will be then prompted to press the start button in order to start the TicTacToe game. Now both playerrs can play TicTacToe until one of them wins, or until they reach a tie. After the game finishes both players will be able to see the leaderboard. Tthe leaderboard displays the top ten players in the town with the most TicTacToe wins.
+
 # Covey.Town
 
-Covey.Town provides a virtual meeting space where different groups of people can have simultaneous video calls, allowing participants to drift between different conversations, just like in real life.
-Covey.Town was built for Northeastern's [Spring 2021 software engineering course](https://neu-se.github.io/CS4530-CS5500-Spring-2021/), and is designed to be reused across semesters.
+Covey.Town provides a virtual meeting space where different groups of people can have simultaneous video calls, allowing participants to drift between different conversations, just like in real life. Covey.Town was built for Northeastern's [Spring 2021 software engineering course](https://neu-se.github.io/CS4530-CS5500-Spring-2021/), and is designed to be reused across semesters.
 You can view our reference deployment of the app at [app.covey.town](https://app.covey.town/) - this is the version that students built on, and our [project showcase](https://neu-se.github.io/CS4530-CS5500-Spring-2021/project-showcase) highlights select projects from Spring 2021.
 
 ![Covey.Town Architecture](docs/covey-town-architecture.png)
@@ -45,3 +52,5 @@ Create a `.env` file in the `frontend` directory, with the line: `REACT_APP_TOWN
 
 In the `frontend` directory, run `npm start` (again, you'll need to run `npm install` the very first time). After several moments (or minutes, depending on the speed of your machine), a browser will open with the frontend running locally.
 The frontend will automatically re-compile and reload in your browser if you change any files in the `frontend/src` directory.
+
+
