@@ -6,8 +6,8 @@ Covey.Town TicTacToe Minigame Version is an enhanced version of the original Cov
 
 In order to be able to play Tic Tac Toe with another player, the user must first go into the Arcade in Covey.Town. This space can be found by first going as far South as possible and then as far East. Here there will be a "portal" embedded in the wall with two arrows indicating where to go. Once there, there will be two clearly labeled Minigame Areas where users can get together to play TicTacToe. The game will only start when two players join the Minigame Area. The first player who goes into the area will be prompted to start a new game by pressing space. The second player that walks into the Minigame Area will be able to join the game after also pressing space. The hostt will be then prompted to press the start button in order to start the TicTacToe game. Now both playerrs can play TicTacToe until one of them wins, or until they reach a tie. After the game finishes both players will be able to see the leaderboard. Tthe leaderboard displays the top ten players in the town with the most TicTacToe wins.
 
-![Covey.Town Arcade](docs/Screen Shot 2022-04-25 at 6.59.22 PM.png)
-![Tic Tac Toe Game](docs/Screen%20Shot%202022-04-25%20at%206.59.22%20PM.png)
+![Covey.Town Arcade](docs/Screen%20Shot%202022-04-25%20at%206.59.22%20PM.png)
+![Tic Tac Toe Game](docs/Screen%20Shot%202022-04-25%20at%207.02.06%20PM.png)
 # Covey.Town
 
 Covey.Town provides a virtual meeting space where different groups of people can have simultaneous video calls, allowing participants to drift between different conversations, just like in real life. Covey.Town was built for Northeastern's [Spring 2021 software engineering course](https://neu-se.github.io/CS4530-CS5500-Spring-2021/), and is designed to be reused across semesters.
