@@ -193,6 +193,20 @@ describe('CoveyTownController', () => {
           fail('No joinGameHandler registered');
         }
       });
+      it('MinigameRequestHandlers leave game room', async () => {
+        TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
+        const townName = `FriendlyNameTest-${nanoid()}`;
+        const townController = new CoveyTownController(townName, false);
+        minigameSubscriptionHandler(mockSocket, townController);
+        const leaveGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'leave_game_room');
+
+        if (leaveGameHandler && leaveGameHandler[1]) {
+          const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+          await leaveGameHandler[1](newMinigameArea.label);                    
+        } else {
+          fail('No leaveGameHandler registered');
+        }
+      });
       it('MinigameRequestHandlers start game', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
         townSubscriptionHandler(mockSocket);
@@ -210,6 +224,24 @@ describe('CoveyTownController', () => {
         } else {
           fail('No startGameHandler registered');
         }                 
+      });
+      it('MinigameRequestHandlers restart game room', async () => {
+        TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
+        const townName = `FriendlyNameTest-${nanoid()}`;
+        const townController = new CoveyTownController(townName, false);
+        minigameSubscriptionHandler(mockSocket, townController);
+        const restartGameHandler = mockSocket.on.mock.calls.find(call => call[0] === 'restart_game');
+
+        if (restartGameHandler && restartGameHandler[1]) {
+          const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
+          try {
+            await restartGameHandler[1](newMinigameArea.label);     
+          } catch (error) {
+            expect(restartGameHandler[1]).not.toBe(undefined);
+          }                  
+        } else {
+          fail('No restartGameHandler registered');
+        }
       });
       it('MinigameRequestHandlers update game', async () => {
         TestUtils.setSessionTokenAndTownID(testingTown.coveyTownID, session.sessionToken, mockSocket);
@@ -238,13 +270,8 @@ describe('CoveyTownController', () => {
         const updateLeaderboardHandler = mockSocket.on.mock.calls.find(call => call[0] === 'update_leaderboard');
 
         if (updateLeaderboardHandler && updateLeaderboardHandler[1]) {
-          const newMinigameArea = TestUtils.createMiniGameForTesting({ boundingBox: { x: 50, y: 50, height: 5, width: 5 }, minigameLabel: 'tictactoe' });
           const playerID = 'Jack';
-          try {
-            await updateLeaderboardHandler[1](newMinigameArea.label, playerID);
-          } catch (error) {
-            expect(updateLeaderboardHandler[1]).not.toBe(undefined);
-          }
+          updateLeaderboardHandler[1](playerID);
         } else {
           fail('No updateLeaderboardHandler registered');
         }                 
@@ -503,6 +530,22 @@ describe('CoveyTownController', () => {
       expect(result2).toBe(false);
     });
   });
+  describe('updateLeaderboard', () => {
+    let testingTown: CoveyTownController;
+    beforeEach(() => {
+      const townName = `addConversationArea test town ${nanoid()}`;
+      testingTown = new CoveyTownController(townName, false);
+    });
+    it('should add name and score in leaderboard', ()=>{
+      const mockListener = mock<CoveyTownListener>();
+      testingTown.addTownListener(mockListener);
+      expect(testingTown.ticTacToeLeaderboard).toStrictEqual({});
+      testingTown.updateLeaderboard('Jack');
+      expect(testingTown.ticTacToeLeaderboard).toStrictEqual({ 'Jack': 1 });
+      expect(mockListener.onLeaderboardUpdated).toHaveBeenCalledTimes(1);
+      testingTown.updateLeaderboard('Jack');
+      expect(testingTown.ticTacToeLeaderboard).toStrictEqual({ 'Jack': 2 });
+      expect(mockListener.onLeaderboardUpdated).toHaveBeenCalledTimes(2);
+    });
+  });
 });
-
-// onMinigameAreaUpdated(minigameArea: ServerMinigameArea) : void;
