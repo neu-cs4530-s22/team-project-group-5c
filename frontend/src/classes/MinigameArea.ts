@@ -1,5 +1,4 @@
 import BoundingBox from "./BoundingBox";
-import MiniGame from "./MiniGame";
 
 export type ServerMinigameArea = {
     label: string;
