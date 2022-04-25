@@ -14,7 +14,7 @@ export default class MinigameService {
    * @returns true if the socket receives a joined message
    */
   public static async joinMinigameRoom(socket: Socket, minigameLabel: string): Promise<boolean> {
-    return new Promise((rs, rj) => {
+    return new Promise((rs) => {
       socket.emit("join_game_room", minigameLabel);
       socket.on(`${minigameLabel}_room_joined`, () => rs(true));
     });
@@ -37,7 +37,7 @@ export default class MinigameService {
    * @returns true if the socket receives a message that host started game
    */
   public static async startMinigame(socket: Socket, minigameLabel: string): Promise<boolean> {
-    return new Promise((rs, rj) => {
+    return new Promise((rs) => {
       socket.emit("start_game", minigameLabel);
       socket.on('host_start_game', () => rs(true));
     });
