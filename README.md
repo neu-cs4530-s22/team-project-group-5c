@@ -8,6 +8,7 @@ In order to be able to play Tic Tac Toe with another player, the user must first
 
 ![Covey.Town Arcade](docs/Screen%20Shot%202022-04-25%20at%206.59.22%20PM.png)
 ![Tic Tac Toe Game](docs/Screen%20Shot%202022-04-25%20at%207.02.06%20PM.png)
+![Leaderboard](docs/Screen%20Shot%202022-04-25%20at%207.08.11%20PM.png)
 # Covey.Town
 
 Covey.Town provides a virtual meeting space where different groups of people can have simultaneous video calls, allowing participants to drift between different conversations, just like in real life. Covey.Town was built for Northeastern's [Spring 2021 software engineering course](https://neu-se.github.io/CS4530-CS5500-Spring-2021/), and is designed to be reused across semesters.
