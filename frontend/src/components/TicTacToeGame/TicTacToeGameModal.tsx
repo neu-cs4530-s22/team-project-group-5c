@@ -3,7 +3,7 @@ import { GameBoardMatrix } from './TicTacToeTypes';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import MinigameService from '../../classes/MinigameService';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
-import GameOverModal from '../world/GameOverModal';
+import GameOverModal from './GameOverModal';
 import GridModal from './GridModal';
 
 

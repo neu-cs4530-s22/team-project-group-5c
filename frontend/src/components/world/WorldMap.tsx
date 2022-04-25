@@ -13,7 +13,7 @@ import usePlayersInTown from '../../hooks/usePlayersInTown';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import { Callback } from '../VideoCall/VideoFrontend/types';
 import NewConversationModal from './NewCoversationModal';
-import NewMinigameModal from './NewMinigameModal';
+import NewMinigameModal from '../TicTacToeGame/NewMinigameModal';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import MinigameService from '../../classes/MinigameService';
 
