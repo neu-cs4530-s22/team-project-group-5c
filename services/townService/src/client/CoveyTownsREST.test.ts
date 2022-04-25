@@ -233,21 +233,11 @@ describe('TownsServiceAPIREST', () => {
       expect(res2.coveyUserID).toBeDefined();
     });
   });
-
   describe('Custom: minigameCreateAPI', () => {
     it('Allows for multiple minigames with the same minigame name', async () => {
       const firstMinigame = await createMiniGameForTesting();
       const secondMinigame = await createMiniGameForTesting({ minigame: firstMinigame.minigame });
       expect(firstMinigame.label).not.toBe(secondMinigame.label);
     });
-    // TODO: Not sure this test need or not
-    // it('Prohibits a blank label', async () => {
-    //   try {
-    //     await createMiniGameForTesting({ minigameLabel: '' });
-    //     fail('createMiniGame should throw an error if label is empty string');
-    //   } catch (err) {
-    //     // OK
-    //   }
-    // });
   });
 });
