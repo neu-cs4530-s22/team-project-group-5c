@@ -4,6 +4,7 @@ import CoveyTownListener from '../types/CoveyTownListener';
 import Player from '../types/Player';
 import { ServerConversationArea, ServerMinigameArea } from '../client/TownsServiceClient';
 import { ChatMessage } from '../CoveyTypes';
+import { TicTacToeLeaderBoard } from '../types/Leaderboard';
 
 const mockCoveyListenerTownDestroyed = jest.fn();
 const mockCoveyListenerOtherFns = jest.fn();
@@ -34,6 +35,9 @@ function mockCoveyListener(): CoveyTownListener {
     },
     onMinigameAreaDestroyed(minigameArea: ServerMinigameArea) {
       mockCoveyListenerOtherFns(minigameArea);
+    },
+    onLeaderboardUpdated(updatedLeaderboard: TicTacToeLeaderBoard) {
+      mockCoveyListenerOtherFns(updatedLeaderboard);
     },
   };
 }
