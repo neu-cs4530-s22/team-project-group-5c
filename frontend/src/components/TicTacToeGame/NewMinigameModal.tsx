@@ -10,13 +10,13 @@ import {
   } from '@chakra-ui/react';
 import React,{Dispatch, SetStateAction, useCallback, useEffect, useRef,useState } from 'react';
 import MinigameArea, { MinigameAreaListener } from '../../classes/MinigameArea';
-import TicTacToeGameModal from '../TicTacToeGame/TicTacToeGameModal';
+import TicTacToeGameModal from './TicTacToeGameModal';
 import MinigameService from '../../classes/MinigameService';
 import useCoveyAppState from '../../hooks/useCoveyAppState';
 import useMaybeVideo from '../../hooks/useMaybeVideo';
 import useMinigameAreas from '../../hooks/useMinigameAreas';
 import usePlayersInTown from '../../hooks/usePlayersInTown';
-import { StartGameOptions } from '../TicTacToeGame/TicTacToeTypes';
+import { StartGameOptions } from './TicTacToeTypes';
   
   
 type NewMinigameWaitingProps = {
