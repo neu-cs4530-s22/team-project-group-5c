@@ -1,10 +1,12 @@
 # Covey.Town TicTacToe Minigame Version
 
+https://amazing-rosalind-98f1ce.netlify.app
+
 Covey.Town TicTacToe Minigame Version is an enhanced version of the original Covey.Town with the added TicTacToe Minigame feature. This feature that we have developed as a group is the introduction of minigames into CoveyTown. The concept that inspired our feature is to add some entertainment to CoveyTown so that users can not only talk to each other but also play games in the Town. We have made use of an arcade area in Covey.Town in order to implement our Minigame feature, where users can get together to play minigames. Our specific feature is a multiplayer TicTacToe game as well as a leaderboard for TicTacToe. We added two interactable gameAreas that function similarly to the existing conversationAreas but allow users to play a game of TicTacToe with others in the town.
 
 ### Usage
 
-In order to be able to play Tic Tac Toe with another player, the user must first go into the Arcade in Covey.Town. This space can be found by first going as far South as possible and then as far East. Here there will be a "portal" embedded in the wall with two arrows indicating where to go. Once there, there will be two clearly labeled Minigame Areas where users can get together to play TicTacToe. The game will only start when two players join the Minigame Area. The first player who goes into the area will be prompted to start a new game by pressing space. The second player that walks into the Minigame Area will be able to join the game after also pressing space. The hostt will be then prompted to press the start button in order to start the TicTacToe game. Now both playerrs can play TicTacToe until one of them wins, or until they reach a tie. After the game finishes both players will be able to see the leaderboard. Tthe leaderboard displays the top ten players in the town with the most TicTacToe wins.
+In order to be able to play Tic Tac Toe with another player, the user must first go into the Arcade in Covey.Town. This space can be found by first going as far South as possible and then as far East. Here there will be a "portal" embedded in the wall with two arrows indicating where to go. Once there, there will be two clearly labeled Minigame Areas where users can get together to play TicTacToe. The game will only start when two players join the Minigame Area. Either of the two Minigame Areas can be used to play as long as they are not already fully occupied. Multiple games can also be running at once. The first player who goes into the area will be prompted to start a new game by pressing space. The second player that walks into the Minigame Area will be able to join the game after also pressing space. Any other player that enters the area will not be able to join the game, as it will be occupied! The host will be then prompted to press the start button in order to start the TicTacToe game. Now both playerrs can play TicTacToe until one of them wins, or until they reach a tie. After the game finishes both players will be able to see the leaderboard. Tthe leaderboard displays the top ten players in the town with the most TicTacToe wins.
 
 Covey.Town Arcade
 ![Covey.Town Arcade](docs/Screen%20Shot%202022-04-25%20at%206.59.22%20PM.png)
@@ -50,6 +52,8 @@ To create an account and configure your local environment:
 Once your backend is configured, you can start it by running `npm start` in the `services/townService` directory (the first time you run it, you will also need to run `npm install`).
 The backend will automatically restart if you change any of the files in the `services/townService/src` directory.
 
+No other installation is required for the added Minigame feature.
+
 ### Configuring the frontend
 
 Create a `.env` file in the `frontend` directory, with the line: `REACT_APP_TOWNS_SERVICE_URL=http://localhost:8081` (if you deploy the towns service to another location, put that location here instead)
@@ -58,5 +62,7 @@ Create a `.env` file in the `frontend` directory, with the line: `REACT_APP_TOWN
 
 In the `frontend` directory, run `npm start` (again, you'll need to run `npm install` the very first time). After several moments (or minutes, depending on the speed of your machine), a browser will open with the frontend running locally.
 The frontend will automatically re-compile and reload in your browser if you change any files in the `frontend/src` directory.
+
+No other installation is required for the added Minigame feature.
 
 
