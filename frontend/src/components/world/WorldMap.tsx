@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Heading, StackDivider, useToast, VStack, Text } from '@chakra-ui/react';
+import { Heading, useToast, VStack, Text } from '@chakra-ui/react';
 import BoundingBox from '../../classes/BoundingBox';
 import ConversationArea from '../../classes/ConversationArea';
 import MinigameArea from '../../classes/MinigameArea';
