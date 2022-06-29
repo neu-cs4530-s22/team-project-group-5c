@@ -30,7 +30,7 @@ jobs:
         run: cd services/townService; npm install && npm run lint && npm test
 
       - name: Build and test frontend components
-        run: cd frontend; npm install && npm run lint && npm test
+        run: cd frontend; npm install --legacy-peer-deps && npm run lint && npm test
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: build-and-test
