@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useToast } from '@chakra-ui/react';
+import { Heading, StackDivider, useToast, VStack, Text } from '@chakra-ui/react';
 import BoundingBox from '../../classes/BoundingBox';
 import ConversationArea from '../../classes/ConversationArea';
 import MinigameArea from '../../classes/MinigameArea';
@@ -730,11 +730,6 @@ class CoveyGameScene extends Phaser.Scene {
             const newMinigameArea = new MinigameArea(
               BoundingBox.fromSprite(minigameSprite as Phaser.GameObjects.Sprite),
               minigameLabel,
-              // "new TicTacToeModel(
-              //   false,
-              //   [myPlayer],
-              //   false
-              // ),"
               "tic tac toe"
             );
             this.setNewMinigame(newMinigameArea);
@@ -1091,6 +1086,27 @@ export default function WorldMap(): JSX.Element {
       <div id='map-container' />
       <div id='social-container'>
         <SocialSidebar />
+      </div>
+      <div id='social-container'>
+      <VStack align="left"
+        spacing={2}
+        border='2px'
+        padding={2}
+        marginLeft={2}
+        borderColor='gray.500'
+        height='100%'
+        borderRadius='4px'>
+        <Heading fontSize='xl' as='h1'>Minigame Area Instructions</Heading>
+        <Text>
+          To find the minigame areas, head down and to the right through the portal doors to the arcade room! 
+        </Text>
+        <Text>
+          There, you will find two minigame areas for Tic-tac-toe, and follow the instructions to play.
+        </Text>
+        <Text>
+          You will need a second player, but you can join the town yourself in another browser window.
+        </Text>
+      </VStack>
       </div>
     </div>
   );
